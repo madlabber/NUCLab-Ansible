@@ -1,0 +1,83 @@
+---
+- name: Configure DC
+  hosts: win
+  vars_files:
+   - vars.yml
+  gather_facts: yes
+  tasks:
+   - set_fact:
+       ansible_winrm_server_cert_validation: ignore
+   - name: Disable IEESC for Administrators
+     win_regedit:
+       path: HKLM:\SOFTWARE\Microsoft\Active Setup\Installed Components\{A509B1A7-37EF-4b3f-8CFC-4F3A74704073}
+       name: IsInstalled
+       data: 0
+       type: dword 
+   - name: Disable IEESC for Users
+     win_regedit:
+       path: HKLM:\SOFTWARE\Microsoft\Active Setup\Installed Components\{A509B1A8-37EF-4b3f-8CFC-4F3A74704073}
+       name: IsInstalled
+       data: 0
+       type: dword 
+   - name: Disable firewall for Domain, Public and Private profiles
+     win_firewall:
+       state: disabled
+       profiles:
+       - Domain
+       - Private
+       - Public
+     tags: disable_firewall
+   - name: Change the hostname 
+     win_hostname:
+       name: '{{ dc_hostname }}'
+     register: res
+   - name: Reboot
+     win_reboot:
+     when: res.reboot_required     
+   - name: Install Active Directory
+     win_feature: >
+          name=AD-Domain-Services
+          include_management_tools=yes
+          include_sub_features=yes
+          state=present
+     register: result
+   - name: Create Domain
+     win_domain: >
+        dns_domain_name='{{ lab_domain }}'
+        safe_mode_password='{{ lab_password }}'
+     register: ad
+   - name: reboot server
+     win_reboot:
+      msg: "Installing AD. Rebooting..."
+      pre_reboot_delay: 15
+     when: ad.changed
+   - name: Create static record for ESXi
+     win_dns_record:
+       name: '{{ esxi_hostname }}'
+       type: "A"
+       state: present
+       value: '{{ esxi_address }}'
+       zone: '{{ lab_domain }}'
+   - name: Create static record for vCenter
+     win_dns_record:
+       name: '{{ vcenter_hostname }}'
+       type: "A"
+       state: present
+       value: '{{ vcenter_address }}'
+       zone: '{{ lab_domain }}'
+   - name: Create static record for ONTAP
+     win_dns_record:
+       name: '{{ ontap_hostname }}'
+       type: "A"
+       state: present
+       value: '{{ ontap_address }}'
+       zone: '{{ lab_domain }}'
+   - name: Check for xRemoteDesktopAdmin Powershell module
+     win_psmodule:
+       name: xRemoteDesktopAdmin
+       state: present
+   - name: Windows | Enable Remote Desktop
+     win_dsc:
+       resource_name: xRemoteDesktopAdmin
+       Ensure: present
+       UserAuthentication: NonSecure

@@ -1,0 +1,21 @@
+These playbooks deploy and configure vCenter server to support the lab infrastructure.
+
+Prerequisits:
+1. Ansible 2.8
+2. pyVmomi
+     pip install pyvmomi
+3. The vCenter OVA file, which can be extracted from the vCenter VCSA distribution ISO
+4. Customize vars.yml as required
+
+Deploying and configuring vCenter with Ansible:
+1. Run the 'Deploy' playbook:
+     ansible-playbook 03_VC_Deploy.yml
+
+2. Run the 'Config' playbook:
+     ansible-playbook 03_VC_Config.yml
+
+Note:
+  vCenter can take 15-20 minutes to boot and install after running the deploy playbook.
+  Verify that the vCenter web client is available and that you can log in as administrator@vsphere.local
+  before running the config playbook.
+

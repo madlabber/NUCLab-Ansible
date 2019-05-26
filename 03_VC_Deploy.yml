@@ -1,0 +1,38 @@
+---
+- hosts: localhost 
+  name: vCenter Configuration 
+  vars:
+    validate_certs: no
+  vars_files: 
+    vars.yml
+  tasks:
+  - vmware_deploy_ovf:
+      hostname: '{{ esxi_address }}'
+      username: '{{ esxi_username }}'
+      password: '{{ lab_password }}'
+      name: '{{ vcenter_hostname }}'
+      ovf: '{{ vcenter_ova }}'
+      wait_for_ip_address: true
+      validate_certs: no
+      inject_ovf_env: true
+      properties:
+        DeploymentOption.value: 'tiny' # tiny,small,medium,large,management-tiny,management-small,management-medium,management-large,infrastructure
+        IpAssignment.IpProtocol: 'IPv4' # IP Protocol
+        guestinfo.cis.appliance.net.addr.family: 'ipv4' # IP Address Family
+        guestinfo.cis.appliance.net.mode: 'static' # IP Address Mode
+        guestinfo.cis.appliance.net.addr: '{{ vcenter_address }}' # IP Address 
+        guestinfo.cis.appliance.net.pnid: '{{ vcenter_fqdn }}' # IP PNID (same as IP Address if there's no DNS)
+        guestinfo.cis.appliance.net.prefix: '{{ lab_netmask_cidr }}' # IP Network Prefix (CIDR notation)
+        guestinfo.cis.appliance.net.gateway: '{{ lab_gateway }}' # IP Gateway
+        guestinfo.cis.appliance.net.dns.servers: '{{ dc_address }}' # Comma separated list of IP addresses of DNS servers.
+        guestinfo.cis.appliance.ntp.servers: '0.pool.ntp.org' # Comma seperated list of hostnames or IP addresses of NTP Servers
+        guestinfo.cis.appliance.root.passwd: '{{ lab_password }}' # Root Password
+        guestinfo.cis.appliance.ssh.enabled: 'True' # Enable SSH
+        guestinfo.cis.deployment.autoconfig: 'True' # Auto-configure after deployment
+        guestinfo.cis.vmdir.first-instance: 'True' # True to create a new SSO domain
+        guestinfo.cis.vmdir.username: 'administrator@vsphere.local'
+        guestinfo.cis.vmdir.domain-name: 'vsphere.local' # SSO Domain Name
+        guestinfo.cis.vmdir.site-name: 'site01' # SSO Site Name
+        guestinfo.cis.vmdir.password: '{{ lab_password }}' # SSO Admin Password
+        domain: '{{ lab_domain }}'
+    delegate_to: localhost

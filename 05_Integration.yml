@@ -1,0 +1,113 @@
+---
+- hosts: win
+  gather_facts: false
+  name: Integration Tasks
+  vars:
+    https: true
+    validate_certs: false
+  vars_files: 
+    vars.yml
+  tasks: 
+  - name: Mount NFS labs datastore to ESXi
+    vmware_host_datastore:
+      hostname: '{{ esxi_address }}'
+      username: '{{ esxi_username }}'
+      password: '{{ lab_password }}'
+      esxi_hostname: '{{ esxi_fqdn }}'
+      validate_certs: no
+      datastore_name: "{{ ontap_vol_labs }}"
+      datastore_type: 'nfs'
+      nfs_server: '{{ ontap_svm_address }}'
+      nfs_path: "/{{ ontap_vol_labs }}"
+      nfs_ro: no
+      state: present
+    delegate_to: localhost
+  - name: Mount NFS install datastore to ESXi
+    vmware_host_datastore:
+      hostname: '{{ esxi_address }}'
+      username: '{{ esxi_username }}'
+      password: '{{ lab_password }}'
+      esxi_hostname: '{{ esxi_fqdn }}'
+      validate_certs: no
+      datastore_name: "{{ ontap_vol_install }}"
+      datastore_type: 'nfs'
+      nfs_server: '{{ ontap_svm_address }}'
+      nfs_path: "/{{ ontap_vol_install }}"
+      nfs_ro: no
+      state: present
+    delegate_to: localhost
+  # This doesn't work
+  # - name: Map the install share to drive I
+  #   win_mapped_drive:
+  #     letter: I
+  #     path: '\\{{ ontap_svm_address }}\{{ ontap_vol_install }}'
+  - name: Reserve vCenter RAM
+    vmware_guest:
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ lab_password }}'
+      validate_certs: no
+      name: '{{ vcenter_hostname }}'
+      state: present
+      hardware:
+        memory_reservation_lock: true
+    delegate_to: localhost
+  - name: Reserve DC RAM
+    vmware_guest:
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ lab_password }}'
+      validate_certs: no
+      name: '{{ dc_hostname }}'
+      state: present
+      hardware:
+        memory_reservation_lock: true
+    delegate_to: localhost
+  - name: Upload the VAAI plugin
+    vsphere_copy:
+      host: '{{ vcenter_address }}'
+      login: '{{ vcenter_username }}'
+      password: '{{ lab_password }}'
+      validate_certs: no
+      src: '{{ vaai_plugin }}'
+      datacenter: "{{ vcenter_datacenter }}"
+      datastore: datastore1
+      path: /NetAppNasPlugin.vib
+    delegate_to: localhost
+- hosts: esx
+  vars_files: 
+    vars.yml
+  tasks:
+  - name: Install the VAAI vib (manual reboot required)
+    shell: esxcli software vib install -v /vmfs/volumes/datastore1/NetAppNasPlugin.vib
+    register: vibs
+    changed_when: false
+    ignore_errors: yes
+  - name: Enable Autostart
+    shell: vim-cmd hostsvc/autostartmanager/enable_autostart true
+    register: autostartmanager
+    changed_when: false
+    ignore_errors: yes
+  - name: Update Autostart defaults
+    shell: vim-cmd hostsvc/autostartmanager/update_defaults "120" "120" "guestShutdown" "yes"
+    register: autostartmanager
+    changed_when: false
+    ignore_errors: yes
+  - name: Set Autostart order for ONTAP Select
+    shell: 'vim-cmd hostsvc/autostartmanager/update_autostartentry $(vim-cmd vmsvc/getallvms | grep {{ ontap_hostname }} | cut -d" " -f1) "powerOn" "120" "1" "guestShutdown" "120" "yes"'
+    register: autostartmanager
+    changed_when: false
+    ignore_errors: yes
+  - name: Set Autostart order for DC
+    shell: 'vim-cmd hostsvc/autostartmanager/update_autostartentry $(vim-cmd vmsvc/getallvms | grep {{ dc_hostname }} | cut -d" " -f1) "powerOn" "120" "2" "guestShutdown" "120" "yes"'
+    register: autostartmanager
+    changed_when: false
+    ignore_errors: yes
+  - name: Set Autostart order for vCenter
+    shell: 'vim-cmd hostsvc/autostartmanager/update_autostartentry $(vim-cmd vmsvc/getallvms | grep {{ vcenter_hostname }} | cut -d" " -f1) "powerOn" "120" "3" "guestShutdown" "120" "yes"'
+    register: autostartmanager
+    changed_when: false
+    ignore_errors: yes
+
+
+

@@ -1,0 +1,19 @@
+
+This playbook performs the initial setup of the host for the NUC lab, but the VMware ansible module can't upload files directly to a host datastore, so some manual steps are required after running this playbook.
+
+Prerequisits:
+1. Ansible 2.8
+2. pyvmomi module (required by the VMware Ansible modules)
+     pip install pyvmomi
+3. ESX must be installed and the IP/hostname/dns domains must be configured in the console interface
+
+Running the playbook:
+1. Edit the vars.yml file as required
+2. Run the playbook
+    ansible-playbook 01_ESXi_Config.yml
+
+Installing the VAAI Vib:
+1. Upload the VAAI vib to the host's local datastore (datastore1)
+2. SSH to the host and run the following command:
+     esxcli software vib install -v /vmfs/volumes/datastore1/NetAppNasPlugin.v23.vib 
+3. reboot the esxi host

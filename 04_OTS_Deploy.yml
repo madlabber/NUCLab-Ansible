@@ -1,0 +1,59 @@
+---
+- hosts: localhost 
+  name: Deploy ONTAP Select 
+  vars:
+    validate_certs: no
+  vars_files: 
+    vars.yml
+  tasks:
+  - vmware_deploy_ovf:
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ lab_password }}'
+      datacenter: '{{ vcenter_datacenter }}'
+      cluster: '{{ vcenter_cluster }}'
+      datastore: '{{ esxi_local_datastore }}'
+      name: '{{ ontap_hostname }}'
+      ovf: '{{ ontap_select_ova }}'
+      disk_provisioning: thin
+      power_on: no
+      wait_for_ip_address: false
+      validate_certs: no
+      inject_ovf_env: true
+      properties:
+        clustername: '{{ ontap_hostname }}'
+        Data-disk: '100'
+        cluster_mgmt_ipaddr: '{{ ontap_address }}' 
+        node_mgmt_ipaddr: '{{ ontap_node_address }}' 
+        netmask: '{{ lab_netmask }}' 
+        gateway: '{{ lab_gateway }}' 
+        node_name: '{{ ontap_node_name }}' 
+        password: '{{ lab_password }}' 
+    delegate_to: localhost
+  - name: Adjust VM Sizing
+    vmware_guest:
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ lab_password }}'
+      validate_certs: no
+      name: '{{ ontap_hostname }}'
+      state: present
+      hardware:
+        memory_mb: '{{ ontap_memory_mb }}'
+        num_cpus: '{{ ontap_num_vcpus }}'
+        memory_reservation_lock: true
+        cpu_reservation: 1000 # ensure enough CPU to flush nvram when host is overloaded
+      customvalues:
+        - key: pciHole.start
+          value: 1024  # Moving the PCI hole here gives ONTAP access to more system ram
+    delegate_to: localhost
+  - name: Start VM
+    vmware_guest:
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ lab_password }}'
+      validate_certs: no
+      name: '{{ ontap_hostname }}'
+      state: poweredon
+      wait_for_ip_address: true
+    delegate_to: localhost

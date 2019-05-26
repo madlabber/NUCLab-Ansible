@@ -1,0 +1,15 @@
+--- 
+- hosts: localhost 
+  name: ESXi Facts 
+  vars:
+    validate_certs: no
+  vars_files: 
+    vars.yml
+  tasks: 
+  - name: Gather facts about ESXi Host
+    vmware_host_config_facts:
+      hostname: '{{ esxi_address }}'
+      username: '{{ esxi_username }}'
+      password: '{{ lab_password }}'
+      esxi_hostname: '{{ esxi_hostname }}'
+      validate_certs: no

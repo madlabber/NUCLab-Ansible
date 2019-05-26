@@ -1,0 +1,45 @@
+Installation of the portal has not yet been scripted.  The following is an outline of the process.
+
+
+
+Scriptable tasks:
+Install PowerCLI
+  Install-Module -Name VMware.PowerCLI
+Configure Powershell unrestricted execution policy
+  set-executionpolicy unrestricted
+Configure PowerCLI ignore certs
+  Set-PowerCLIConfiguration -scope AllUsers -InvalidCertificateAction Ignore -confirm:$false
+COnfigure PowerCLI not to show deprecation warnings
+  Set-PowerCLIConfiguration -scope AllUsers -DisplayDeprecationWarnings $false -confirm:$false
+Configure PowerCLI CIP option
+  Set-PowerCLIConfiguration -Scope AllUsers -ParticipateInCEIP $false -confirm:$false
+Configure Default vServer mode
+  Set-PowerCLIConfiguration -Scope AllUsers -DefaultVIServerMode Multiple -confirm:$false
+configure iis for myrtille:
+$IISFeatures = "Web-Server","Web-WebServer","Web-Common-Http","Web-Default-Doc","Web-Dir-Browsing","Web-Http-Errors","Web-Static-Content","Web-Health","Web-Http-Logging","Web-Performance","Web-Stat-Compression","Web-Security","Web-Filtering","Web-App-Dev","Web-Net-Ext45","Web-Asp-Net45","Web-ISAPI-Ext","Web-ISAPI-Filter","Web-WebSockets","Web-Mgmt-Tools","Web-Mgmt-Console"
+Install-WindowsFeature -Name $IISFeatures
+
+Manual Installs:
+Install Chrome
+install sublime
+install github desktop
+Install powershell 5.1 (if windows is older than 2016)
+Install PSTK
+install node.js
+install myrtille, be sure to change the default port to 8083
+
+clone repo to c:\vlab
+cd c:\vlab
+Install nodemon:
+  npm install nodemon -g
+Install express:
+  npm install express
+retreive myrtille password hash
+  https://localhost/myrtille/GetHash.aspx?password=P@ssw0rd  
+configure settings.cfg
+use the menu to save creds
+
+
+Start the portal app
+  nodemon c:\vlab\vlab-node.js
+

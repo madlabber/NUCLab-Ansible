@@ -1,0 +1,25 @@
+These playbooks deploy and configure ONTAP Select to support the lab infrastructure.
+
+Prerequisits:
+1. Ansible 2.8
+2. The ONTAP Select Single node eval OVA, which can be downloaded from the evaluation center on the mysupport site.  
+   (i.e. 9.5_DataONTAPv-esx-standalone-nodar.ova )
+
+
+Optional:
+If an NLF key is avilable, modify the serial number embedded within the OVF file to match the serial number in the NLF file.
+1. Extract the OVA (with any tool that can extract tar archives)
+2. Delete the .mf file
+3. Edit the OVF file, replacing the serial number as required
+
+Deploying ONTAP Select:
+1. Customize the vars.yml as required
+2. Run the Deploy playbook:
+     ansible-playbook 04_OTS_Deploy.yml
+3. Run the Configure playbook:
+     ansible-playbook 04_OTS_Configure.yml
+
+Note:
+   It can take 5 minutes or more for the ONTAP Select VM to initialize after running the deploy playbook.  Monitor the VM
+   Console and wait for the login prompt before running the configure playbook.
+

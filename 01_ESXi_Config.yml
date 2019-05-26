@@ -1,0 +1,86 @@
+--- 
+- hosts: localhost 
+  name: ESXi Configuration 
+  vars:
+    validate_certs: no
+  vars_files: 
+    vars.yml
+  tasks: 
+  - name: Gather facts about ESXi Host
+    vmware_host_config_facts:
+      hostname: '{{ esxi_address }}'
+      username: '{{ esxi_username }}'
+      password: '{{ lab_password }}'
+      esxi_hostname: '{{ esxi_hostname }}'
+      validate_certs: no
+  - name: Enable SSH (TSM-SSH)
+    vmware_host_service_manager:
+      hostname: '{{ esxi_address }}'
+      username: '{{ esxi_username }}'
+      password: '{{ lab_password }}'
+      esxi_hostname: '{{ esxi_address }}'
+      service_name: TSM-SSH
+      service_policy: on
+      state: present
+      validate_certs: no
+    delegate_to: localhost
+  - name: Enable DCUI 
+    vmware_host_service_manager:
+      hostname: '{{ esxi_address }}'
+      username: '{{ esxi_username }}'
+      password: '{{ lab_password }}'
+      esxi_hostname: '{{ esxi_address }}'
+      service_name: DCUI
+      service_policy: on
+      state: present
+      validate_certs: no
+    delegate_to: localhost
+  - name: Enable ESX Shell (TSM)
+    vmware_host_service_manager:
+      hostname: '{{ esxi_address }}'
+      username: '{{ esxi_username }}'
+      password: '{{ lab_password }}'
+      esxi_hostname: '{{ esxi_address }}'
+      service_name: TSM
+      service_policy: on
+      state: present
+      validate_certs: no
+    delegate_to: localhost
+  - name: Set Advanced Options
+    vmware_host_config_manager:
+      hostname: '{{ esxi_address }}'
+      username: '{{ esxi_username }}'
+      password: '{{ lab_password }}'
+      esxi_hostname: '{{ esxi_address }}'
+      validate_certs: no
+      options:
+        "UserVars.SuppressShellWarning": 1
+        "Mem.ShareForceSalting": 0
+        "Misc.BlueScreenTimeout": 60
+        "Net.TcpipHeapSize": 32
+        "Net.TcpipHeapMax": 512
+        "NFS.MaxVolumes": 256
+        "NFS41.MaxVolumes": 256
+        "NFS.MaxQueueDepth": 64
+        "NFS.HeartbeatMaxFailures": 10
+        "NFS.HeartbeatFrequency": 12
+        "NFS.HeartbeatTimeout": 5
+  - name: Manage Firewall Rules
+    vmware_host_firewall_manager:
+      hostname: '{{ esxi_address }}'
+      username: '{{ esxi_username }}'
+      password: '{{ lab_password }}'
+      esxi_hostname: '{{ esxi_address }}'
+      validate_certs: no      
+      rules:
+        - name: remoteSerialPort 
+          enabled: true
+  - name: Add a VMWare vSwitch without any physical NIC attached
+    vmware_vswitch:
+      hostname: '{{ esxi_address }}'
+      username: '{{ esxi_username }}'
+      password: '{{ lab_password }}'
+      validate_certs: no 
+      switch: vSwitch1
+      mtu: 9000
+    delegate_to: localhost

@@ -1,0 +1,185 @@
+---
+- hosts: localhost 
+  gather_facts: false
+  name: Configure ONTAP Select 
+  vars:
+    https: true
+    validate_certs: false
+  vars_files: 
+    vars.yml
+  tasks:
+  - name: Create Aggregates and wait 5 minutes until aggregate is online
+    na_ontap_aggregate:
+      state: present
+      service_state: online
+      name: aggr1
+      disk_count: 1
+      wait_for_online: True
+      time_out: 300
+      hostname: "{{ ontap_address }}"
+      username: admin
+      password: "{{ lab_password }}"
+      https: true
+      validate_certs: false
+  - name: Create SVM
+    na_ontap_svm:
+      state: present
+      name: "{{ ontap_svm_name }}"
+      root_volume: "{{ ontap_svm_name }}_root"
+      root_volume_aggregate: aggr1
+      root_volume_security_style: unix
+      hostname: "{{ ontap_address }}"
+      username: admin
+      password: "{{ lab_password }}"
+      https: true
+      validate_certs: false
+  - name: Create interface
+    na_ontap_interface:
+      state: present
+      interface_name: "{{ ontap_svm_lif }}"
+      home_port: e0a
+      home_node: "{{ ontap_node_name }}"
+      role: data
+      protocols: nfs,cifs
+      admin_status: up
+      failover_policy: local-only
+      firewall_policy: mgmt-nfs
+      is_auto_revert: true
+      address: "{{ ontap_svm_address }}"
+      netmask: "{{ lab_netmask }}"
+      vserver: "{{ ontap_svm_name }}"
+      hostname: "{{ ontap_address }}"
+      username: admin
+      password: "{{ lab_password }}"
+      https: true
+      validate_certs: false  
+  - name: create route
+    na_ontap_net_routes:
+      state: present
+      vserver: "{{ ontap_svm_name }}"
+      hostname: "{{ ontap_address }}"
+      username: admin
+      password: "{{ lab_password }}"
+      https: true
+      validate_certs: false  
+      destination: 0.0.0.0/0
+      gateway: "{{ lab_gateway }}"
+      metric: "20"
+  - name: Enable nfs 
+    na_ontap_nfs:
+      state: present
+      service_state: started
+      vserver: "{{ ontap_svm_name }}"
+      nfsv3: enabled
+      nfsv4: disabled
+      nfsv41: disabled
+      tcp: enabled
+      udp: enabled
+      vstorage_state: enabled
+      hostname: "{{ ontap_address }}"
+      username: admin
+      password: "{{ lab_password }}"
+      https: true
+      validate_certs: false  
+  - name: Setup default rules
+    na_ontap_export_policy_rule:
+      state: present
+      policy_name: default
+      vserver: "{{ ontap_svm_name }}"
+      rule_index: 1 
+      client_match: 0.0.0.0/0
+      ro_rule: any
+      rw_rule: any
+      super_user_security: any
+      hostname: "{{ ontap_address }}"
+      username: admin
+      password: "{{ lab_password }}"
+      https: true
+      validate_certs: false  
+  - name: create DNS
+    na_ontap_dns:
+      state: present
+      vserver: "{{ ontap_svm_name }}"
+      hostname: "{{ ontap_address }}"
+      username: admin
+      password: "{{ lab_password }}"
+      https: true
+      validate_certs: false  
+      domains: "{{ lab_domain }}"
+      nameservers: "{{ dc_address }}"
+      skip_validation: true 
+  - name: create DNS
+    na_ontap_dns:
+      state: present
+      vserver: '{{ ontap_hostname }}'
+      hostname: "{{ ontap_address }}"
+      username: admin
+      password: "{{ lab_password }}"
+      https: true
+      validate_certs: false  
+      domains: "{{ lab_domain }}"
+      nameservers: "{{ dc_address }}"
+      skip_validation: true 
+  - name: Create Labs Volume 
+    na_ontap_volume: 
+      state: present 
+      name: "{{ ontap_vol_labs }}"
+      aggregate_name: "aggr1" 
+      size: "40" 
+      size_unit: gb 
+      space_guarantee: none
+      volume_security_style: unix
+      junction_path: "/{{ ontap_vol_labs }}"
+      vserver: "{{ ontap_svm_name }}"
+      hostname: "{{ ontap_address }}"
+      username: admin
+      password: "{{ lab_password }}"
+      https: true
+      validate_certs: false  
+  - name: Create Install Volume 
+    na_ontap_volume: 
+      state: present 
+      name: "{{ ontap_vol_install }}"
+      aggregate_name: "aggr1" 
+      size: "40" 
+      size_unit: gb 
+      space_guarantee: none
+      volume_security_style: unix
+      junction_path: "/{{ ontap_vol_install }}"
+      vserver: "{{ ontap_svm_name }}"
+      hostname: "{{ ontap_address }}"
+      username: admin
+      password: "{{ lab_password }}"
+      https: true
+      validate_certs: false  
+  - name: Create cifs_server
+    na_ontap_cifs_server:
+      domain: "{{ lab_domain }}"
+      admin_user_name: administrator
+      admin_password: "{{ lab_password }}"
+      cifs_server_name: "{{ ontap_svm_name }}"
+      force: yes
+      state: present
+      service_state: started
+      vserver: "{{ ontap_svm_name }}"
+      hostname: "{{ ontap_address }}"
+      username: admin
+      password: "{{ lab_password }}"
+      https: true
+      validate_certs: false  
+  - name: Create CIFS share
+    na_ontap_cifs:
+      state: present
+      share_name: "{{ ontap_vol_install }}"
+      path: "/{{ ontap_vol_install }}"
+      share_properties: browsable,oplocks
+      symlink_properties: read_only,enable
+      vserver: "{{ ontap_svm_name }}"
+      hostname: "{{ ontap_address }}"
+      username: admin
+      password: "{{ lab_password }}"
+      https: true
+      validate_certs: false 
+    # Configure Name Mapping
+    # map install drive letter
+

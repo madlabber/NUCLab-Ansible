@@ -1,0 +1,17 @@
+[esx]
+172.16.108.40
+
+[win]
+172.16.108.21
+
+[esx:vars]
+ansible_user=root
+ansible_password=P@ssw0rd
+
+[win:vars]
+ansible_user=.\administrator
+ansible_password=P@ssw0rd
+ansible_connection=winrm
+ansible_winrm_transport=ntlm
+ansible_winrm_server_cert_validation=ignore
+ansible_winrm_port=5986

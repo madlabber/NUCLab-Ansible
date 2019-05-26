@@ -1,0 +1,50 @@
+--- 
+- hosts: localhost 
+  name: vCenter Configuration 
+  vars:
+    validate_certs: no
+  vars_files: 
+    vars.yml
+  tasks: 
+  - name: Gather facts about vCenter
+    vmware_about_facts:
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ lab_password }}'
+      validate_certs: '{{ validate_certs }}'
+    delegate_to: localhost
+    register: vcenter_about_info
+  - name: Create Datacenter
+    vmware_datacenter:
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ lab_password }}'
+      datacenter_name: '{{ vcenter_datacenter }}'
+      state: present
+      validate_certs: '{{ validate_certs }}'
+    delegate_to: localhost
+  - name: Create Cluster
+    vmware_cluster:
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ lab_password }}'
+      datacenter_name: '{{ vcenter_datacenter }}'
+      cluster_name: '{{ vcenter_cluster }}'
+      validate_certs: '{{ validate_certs }}'
+      enable_ha: no
+      enable_drs: yes
+      enable_vsan: no
+    delegate_to: localhost
+  - name: Add ESXi Host to vCenter
+    vmware_host:
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ lab_password }}'
+      datacenter: '{{ vcenter_datacenter }}'
+      cluster: '{{ vcenter_cluster }}'
+      esxi_hostname: '{{ esxi_address }}'
+      esxi_username: '{{ esxi_username }}'
+      esxi_password: '{{ lab_password }}'
+      validate_certs: '{{ validate_certs }}'
+      state: present
+    delegate_to: localhost
