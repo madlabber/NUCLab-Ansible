@@ -36,11 +36,15 @@
       nfs_ro: no
       state: present
     delegate_to: localhost
-  # This doesn't work
-  # - name: Map the install share to drive I
-  #   win_mapped_drive:
-  #     letter: I
-  #     path: '\\{{ ontap_svm_address }}\{{ ontap_vol_install }}'
+  - name: download git-client
+    win_get_url:
+      url: 'https://github.com/git-for-windows/git/releases/download/v2.21.0.windows.1/Git-2.21.0-64-bit.exe'
+      dest: 'C:\Windows\Temp\Git-2.21.0-64-bit.exe'
+  - name: install git-client
+    raw: 'C:\Windows\Temp\Git-2.21.0-64-bit.exe /SILENT /COMPONENTS="icons,ext\reg\shellhere,assoc,assoc_sh"'
+    # git clone [<options>] [--] <repo> [<dir>]
+  - name: Clone the repository
+    raw: 'git clone https://github.com/madlabber/vlab.git c:\vlab'
   - name: Reserve vCenter RAM
     vmware_guest:
       hostname: '{{ vcenter_address }}'
