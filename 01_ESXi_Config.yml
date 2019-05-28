@@ -1,6 +1,7 @@
 --- 
 - hosts: localhost 
   name: ESXi Configuration 
+  gather_facts: false
   vars:
     validate_certs: no
   vars_files: 
@@ -84,3 +85,36 @@
       switch: vSwitch1
       mtu: 9000
     delegate_to: localhost
+- hosts: esx
+  vars_files: 
+    vars.yml
+  tasks: 
+  - name: Copy VAAI vib to esx host
+    copy:
+     src: '{{ vaai_plugin }}'
+     dest: '/vmfs/volumes/{{ esxi_local_datastore }}/NetAppNasPlugin.vib'
+  - name: Install the VAAI vib (manual reboot required)
+    shell: 'esxcli software vib install -v /vmfs/volumes/{{ esxi_local_datastore }}/NetAppNasPlugin.vib'
+    register: vibs
+    changed_when: false
+    ignore_errors: yes
+  - name: Reboot-Host
+    vmware_host_powerstate:
+      hostname: '{{ esxi_address }}'
+      username: '{{ esxi_username }}'
+      password: '{{ lab_password }}'
+      esxi_hostname: '{{ esxi_address }}'
+      validate_certs: no   
+      state: reboot-host
+      force: yes
+    delegate_to: localhost
+  - name: Wait for Host Reboot
+    wait_for:
+      port: 443
+      host: '{{ esxi_address }}'
+      delay: 120
+      timeout: 300
+    connection: local
+
+
+

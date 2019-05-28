@@ -7,6 +7,7 @@
 [esx:vars]
 ansible_user=root
 ansible_password=P@ssw0rd
+ansible_ssh_common_args='-o StrictHostKeyChecking=no'
 
 [win:vars]
 ansible_user=.\administrator

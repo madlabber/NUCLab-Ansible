@@ -36,3 +36,11 @@
         guestinfo.cis.vmdir.password: '{{ lab_password }}' # SSO Admin Password
         domain: '{{ lab_domain }}'
     delegate_to: localhost
+  - name: Wait for vCenter
+    wait_for:
+      port: 902
+      host: '{{ vcenter_address }}'
+      timeout: 300
+      delay: 10
+      search_regex: vSphere
+    connection: local

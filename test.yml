@@ -1,0 +1,7 @@
+---
+- hosts: esx
+  tasks:
+  - name: Copy file to a remote server
+    copy:
+     src: '{{ vaai_plugin }}'
+     dest: /vmfs/volumes/labs

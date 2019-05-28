@@ -3,6 +3,5 @@ This playbook performs tasks that integrate the VMware and NetApp components.
 ansible-playbook -i inventory 05_integration.yml
 
 Notes:
-1. On OSX, ssh to the ESX server once to save the fingerprint into the known_hosts file prior to running this playbook
-2. OSX needs sshpass.  need to get instructions for installing it via brew
-
+1. OSX needs sshpass.  Need to install via brew:
+    brew install http://git.io/sshpass.rb
