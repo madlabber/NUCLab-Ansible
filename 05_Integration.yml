@@ -63,26 +63,10 @@
       hardware:
         memory_reservation_lock: true
     delegate_to: localhost
-  - name: Upload the VAAI plugin
-    vsphere_copy:
-      host: '{{ vcenter_address }}'
-      login: '{{ vcenter_username }}'
-      password: '{{ lab_password }}'
-      validate_certs: no
-      src: '{{ vaai_plugin }}'
-      datacenter: "{{ vcenter_datacenter }}"
-      datastore: datastore1
-      path: /NetAppNasPlugin.vib
-    delegate_to: localhost
 - hosts: esx
   vars_files: 
     vars.yml
   tasks:
-  - name: Install the VAAI vib (manual reboot required)
-    shell: esxcli software vib install -v /vmfs/volumes/datastore1/NetAppNasPlugin.vib
-    register: vibs
-    changed_when: false
-    ignore_errors: yes
   - name: Enable Autostart
     shell: vim-cmd hostsvc/autostartmanager/enable_autostart true
     register: autostartmanager
