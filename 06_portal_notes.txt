@@ -2,7 +2,7 @@ The portal installation is run from the DC's desktop.
 
 1. RDP into the DC VM
 2. clone the git repo to C:\vlab - this should be done for you by the 05_integration playbook.
-3. Copy settings.cfg.sample to settings.cfg and edit as required
+3. Copy settings.cfg.sample to settings.cfg and edit as required - this should be done for you by the 06_Portal playbook.
 4. Open an administrative powershell window
 5. Run the install.ps1 scipt
      cd C:\vlab
@@ -19,4 +19,3 @@ github desktop  for a nice GUI version of git
 
 Note:
 The portal does not yet run as a service.  It will need to be started manually whenever the DC reboots.
-

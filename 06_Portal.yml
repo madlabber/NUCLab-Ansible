@@ -1,0 +1,111 @@
+---
+- hosts: win
+  gather_facts: false
+  name: Portal configuration
+  vars:
+    https: true
+    validate_certs: false
+  vars_files: 
+    vars.yml
+  tasks: 
+  - name: download git-client
+    win_get_url:
+      url: 'https://github.com/git-for-windows/git/releases/download/v2.21.0.windows.1/Git-2.21.0-64-bit.exe'
+      dest: 'C:\Windows\Temp\Git-2.21.0-64-bit.exe'
+  - name: install git-client
+    raw: 'C:\Windows\Temp\Git-2.21.0-64-bit.exe /SILENT /COMPONENTS="icons,ext\reg\shellhere,assoc,assoc_sh"'
+  - name: Clone the repository
+    raw: 'git clone https://github.com/madlabber/vlab.git {{ portal_home_dir }}'
+    ignore_errors: yes
+  - name: git pull
+    win_shell: 'git pull'
+    args:  
+      chdir: '{{ portal_home_dir }}'
+    ignore_errors: yes
+  - name: download node.js
+    win_get_url:
+      url: 'https://nodejs.org/dist/v10.15.3/node-v10.15.3-x64.msi'
+      dest: 'C:\Windows\Temp\node-v10.15.3-x64.msi'
+  - name: install node.js
+    raw: 'msiexec /qn /l* C:\Windows\Temp\node-log.txt /i C:\Windows\Temp\node-v10.15.3-x64.msi'
+  - name: Install nodemon
+    win_shell: 'npm install nodemon -g'
+    args:  
+      chdir: '{{ portal_home_dir }}'
+  - name: Install express
+    win_shell: 'npm install express'
+    args:  
+      chdir: '{{ portal_home_dir }}'
+  - name: download myrtille
+    win_get_url:
+      url: 'https://github.com/cedrozor/myrtille/releases/download/v2.3.1/Myrtille_2.3.1_x86_x64_Setup.exe'
+      dest: 'C:\Windows\Temp\Myrtille_2.3.1_x86_x64_Setup.exe'
+  - name: Extract Myrtille
+    raw: 'C:\Windows\Temp\Myrtille_2.3.1_x86_x64_Setup.exe -y'
+  - name: install Myrtille
+    raw: 'msiexec /qb! /l* C:\Windows\Temp\myrtille-log.txt /i C:\Windows\Temp\myrtille.msi'  
+  - name: Copy Settings file
+    win_shell: 'copy {{ portal_home_dir }}\settings.cfg.sample {{ portal_home_dir }}\settings.cfg'
+    args:  
+      chdir: '{{ portal_home_dir }}'
+      creates: '{{ portal_home_dir }}\settings.cfg'
+  - name: Write Settings - sitename
+    win_shell: '{{ portal_home_dir }}\set-vlabsettings.ps1 "sitename" "{{ portal_sitename }}"'
+    args:  
+      chdir: '{{ portal_home_dir }}'
+  - name: Write Settings - vCenter
+    win_shell: '{{ portal_home_dir }}\set-vlabsettings.ps1 "vCenter" "{{ vcenter_address }}"'
+    args:  
+      chdir: '{{ portal_home_dir }}'
+  - name: Write Settings - vserver
+    win_shell: '{{ portal_home_dir }}\set-vlabsettings.ps1 "vserver" "{{ ontap_svm_name }}"'
+    args:  
+      chdir: '{{ portal_home_dir }}'
+  - name: Write Settings - VIDatastore
+    win_shell: '{{ portal_home_dir }}\set-vlabsettings.ps1 "VIDatastore" "{{ ontap_vol_labs }}"'
+    args:  
+      chdir: '{{ portal_home_dir }}'
+  - name: Write Settings - cluster_mgmt
+    win_shell: '{{ portal_home_dir }}\set-vlabsettings.ps1 "cluster_mgmt" "{{ ontap_address }}"'
+    args:  
+      chdir: '{{ portal_home_dir }}'
+  - name: Write Settings - VIPortgroup
+    win_shell: '{{ portal_home_dir }}\set-vlabsettings.ps1 "VIPortgroup" "VM Network"'
+    args:  
+      chdir: '{{ portal_home_dir }}'
+  - name: Write Settings - VICluster
+    win_shell: '{{ portal_home_dir }}\set-vlabsettings.ps1 "VICluster" "{{ vcenter_cluster }}"'
+    args:  
+      chdir: '{{ portal_home_dir }}'
+  - name: Write Settings - newID
+    win_shell: '{{ portal_home_dir }}\set-vlabsettings.ps1 "newID" "1000"'
+    args:  
+      chdir: '{{ portal_home_dir }}'
+  - name: Write Settings - vswitch
+    win_shell: '{{ portal_home_dir }}\set-vlabsettings.ps1 "vswitch" "vSwitch1"'
+    args:  
+      chdir: '{{ portal_home_dir }}'
+  - name: Write Settings - vlanbase
+    win_shell: '{{ portal_home_dir }}\set-vlabsettings.ps1 "vlanbase" "1000"'
+    args:  
+      chdir: '{{ portal_home_dir }}'
+  - name: Write Settings - autostart
+    win_shell: '{{ portal_home_dir }}\set-vlabsettings.ps1 "autostart" "false"'
+    args:  
+      chdir: '{{ portal_home_dir }}'
+  - name: Write Settings - rdphost
+    win_shell: '{{ portal_home_dir }}\set-vlabsettings.ps1 "rdphost" "http://{{ dc_address }}"'
+    args:  
+      chdir: '{{ portal_home_dir }}'
+  - name: Write Settings - rdpdomain
+    win_shell: '{{ portal_home_dir }}\set-vlabsettings.ps1 "rdpdomain" "{{ portal_rdpdomain }}"'
+    args:  
+      chdir: '{{ portal_home_dir }}'
+  - name: Write Settings - rdpuser
+    win_shell: '{{ portal_home_dir }}\set-vlabsettings.ps1 "rdpuser" "{{ portal_rdpuser }}"'
+    args:  
+      chdir: '{{ portal_home_dir }}'
+  - name: Write Settings - rdppassword
+    win_shell: '{{ portal_home_dir }}\set-vlabsettings.ps1 "rdppassword" "P@ssw0rd"'
+    args:  
+      chdir: '{{ portal_home_dir }}'

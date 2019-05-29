@@ -31,4 +31,6 @@ ontap_svm_address: "172.16.108.93"
 ontap_vol_labs: "labs"
 ontap_vol_install: "install"
 portal_home_dir: 'C:\vlab'
-
+portal_sitename: 'Mini Lab Portal'
+portal_rdpdomain: 'LAB'
+portal_rdpuser: 'administrator'

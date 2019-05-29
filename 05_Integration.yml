@@ -72,6 +72,15 @@
     raw: 'C:\Windows\Temp\Myrtille_2.3.1_x86_x64_Setup.exe -y'
   - name: install Myrtille
     raw: 'msiexec /qb! /l* C:\Windows\Temp\myrtille-log.txt /i C:\Windows\Temp\myrtille.msi'  
+  - name: Copy Settings file
+    win_shell: 'copy {{ portal_home_dir }}\settings.cfg.sample {{ portal_home_dir }}\settings.cfg'
+    args:  
+      chdir: '{{ portal_home_dir }}'
+      creates: '{{ portal_home_dir }}\settings.cfg'
+  - name: Write Settings title
+    win_shell: '{{ portal_home_dir }}\set-vlabsettings.ps1 "sitename" "{{ portal_sitename }}"'
+    args:  
+      chdir: '{{ portal_home_dir }}'
   - name: Reserve vCenter RAM
     vmware_guest:
       hostname: '{{ vcenter_address }}'
