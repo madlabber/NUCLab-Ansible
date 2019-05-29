@@ -1,16 +1,16 @@
 The portal installation is run from the DC's desktop.
 
 1. RDP into the DC VM
-2. clone the git repo to C:\vlab
+2. clone the git repo to C:\vlab - this should be done for you by the 05_integration playbook.
 3. Copy settings.cfg.sample to settings.cfg and edit as required
 4. Open an administrative powershell window
 5. Run the install.ps1 scipt
      cd C:\vlab
      .\install.ps1
-6. Other installers will be launched by the script.  Complete those installations interactively.  
-   note: During the myrtille installation change the port to 8083.
+6. Other installers may be launched by the script.  Complete those installations interactively if required.  
 7. Start the portal app
      nodemon c:\vlab\vlab-node.js
+8. Open a browser to http://<ip-address>:8081
 
 Other suggested software:
 chrome          the portal testing has been done against chrome.
