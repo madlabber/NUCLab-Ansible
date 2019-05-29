@@ -42,9 +42,36 @@
       dest: 'C:\Windows\Temp\Git-2.21.0-64-bit.exe'
   - name: install git-client
     raw: 'C:\Windows\Temp\Git-2.21.0-64-bit.exe /SILENT /COMPONENTS="icons,ext\reg\shellhere,assoc,assoc_sh"'
-    # git clone [<options>] [--] <repo> [<dir>]
   - name: Clone the repository
-    raw: 'git clone https://github.com/madlabber/vlab.git c:\vlab'
+    raw: 'git clone https://github.com/madlabber/vlab.git {{ portal_home_dir }}'
+    ignore_errors: yes
+  - name: git pull
+    win_shell: 'git pull'
+    args:  
+      chdir: '{{ portal_home_dir }}'
+    ignore_errors: yes
+  - name: download node.js
+    win_get_url:
+      url: 'https://nodejs.org/dist/v10.15.3/node-v10.15.3-x64.msi'
+      dest: 'C:\Windows\Temp\node-v10.15.3-x64.msi'
+  - name: install node.js
+    raw: 'msiexec /qn /l* C:\Windows\Temp\node-log.txt /i C:\Windows\Temp\node-v10.15.3-x64.msi'
+  - name: Install nodemon
+    win_shell: 'npm install nodemon -g'
+    args:  
+      chdir: '{{ portal_home_dir }}'
+  - name: Install express
+    win_shell: 'npm install express'
+    args:  
+      chdir: '{{ portal_home_dir }}'
+  - name: download myrtille
+    win_get_url:
+      url: 'https://github.com/cedrozor/myrtille/releases/download/v2.3.1/Myrtille_2.3.1_x86_x64_Setup.exe'
+      dest: 'C:\Windows\Temp\Myrtille_2.3.1_x86_x64_Setup.exe'
+  - name: Extract Myrtille
+    raw: 'C:\Windows\Temp\Myrtille_2.3.1_x86_x64_Setup.exe -y'
+  - name: install Myrtille
+    raw: 'msiexec /qb! /l* C:\Windows\Temp\myrtille-log.txt /i C:\Windows\Temp\myrtille.msi'  
   - name: Reserve vCenter RAM
     vmware_guest:
       hostname: '{{ vcenter_address }}'

@@ -30,4 +30,5 @@ ontap_svm_lif: "svm1_lif1"
 ontap_svm_address: "172.16.108.93"
 ontap_vol_labs: "labs"
 ontap_vol_install: "install"
+portal_home_dir: 'C:\vlab'
 
