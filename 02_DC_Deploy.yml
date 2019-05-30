@@ -1,0 +1,62 @@
+---
+- hosts: localhost
+  name: Deploy DC from OVA
+  vars:
+    validate_certs: no
+    dc_ova: "/Users/shatfiel/Downloads/NUCLab/Server2016/Server2016.ovf"
+  vars_files: 
+    vars.yml
+  gather_facts: no
+  tasks:
+  - vmware_deploy_ovf:
+      hostname: '{{ esxi_address }}'
+      username: '{{ esxi_username }}'
+      password: '{{ lab_password }}'
+      name: '{{ dc_hostname }}'
+      ovf: '{{ dc_ova }}'
+      wait_for_ip_address: true
+      validate_certs: no
+      inject_ovf_env: false
+      properties:
+    delegate_to: localhost
+    register: newvm
+  - name: IP address info
+    debug:
+      msg: "{{ newvm.instance.ipv4 }} {{ dc_hostname }}"
+  - name: Get facts from given VM Name
+    vmware_guest_facts:
+      hostname: '{{ esxi_address }}'
+      username: '{{ esxi_username }}'
+      password: '{{ lab_password }}'
+      datacenter: ha-datacenter
+      validate_certs: no
+      name: '{{ dc_hostname }}'
+    delegate_to: localhost
+    register: vmfacts_dc01
+  - debug: msg="{{ vmfacts_dc01['instance']['ipv4'] }}"
+  - name: Use VMware Tools to enable WinRM, and set IP Address
+    local_action:
+      module: vmware_vm_shell
+      hostname: '{{ esxi_address }}'
+      username: '{{ esxi_username }}'
+      password: '{{ lab_password }}'
+      validate_certs: no
+      vm_username: Administrator
+      vm_password: '{{ lab_password }}'
+      vm_id: '{{ dc_hostname }}'
+      vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
+      vm_shell_args: "" 
+    with_items:
+      - '-command "& {Set-ExecutionPolicy Unrestricted}"'
+      - '-command "& {Invoke-Expression ((New-Object System.Net.Webclient).DownloadString(\"https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1\"))}"'
+      - '-command "Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled False"'
+      - "-command \"new-netipaddress -InterfaceIndex (get-netipaddress | where {$_.IPAddress -eq \"{{ vmfacts_dc01['instance']['ipv4'] }}\"}).InterfaceIndex -IPAddress {{ dc_address }} -prefixlength {{lab_netmask_cidr}} -defaultgateway {{ lab_gateway }}\""
+  - name: Wait for system to become reachable over WinRM
+    wait_for_connection:
+      timeout: 900
+  - name: Set upstream DNS server 
+    win_dns_client:
+      adapter_names: '*'
+      ipv4_addresses:
+      - '{{ lab_gateway }}'
+    delegate_to: '{{ dc_address }}'
