@@ -1,9 +1,91 @@
 ---
+- name: prep ESX host
+  hosts: esx
+  vars_files: 
+    vars.yml
+  tasks: 
+  - name: Configure ESXi hostname and public DNS servers
+    vmware_dns_config:
+      hostname: '{{ esxi_address }}'
+      username: '{{ esxi_username }}'
+      password: '{{ lab_password }}'
+      validate_certs: no 
+      change_hostname_to: '{{ esxi_hostname }}'
+      domainname: '{{ lab_domain }}'
+      dns_servers:
+      - 8.8.8.8
+      - 8.8.4.4
+    delegate_to: localhost
+    # ls /vmimages/tools-isoimages/windows.iso
+  - name: Copy the windows tools to the local datastore
+    shell: 'cp /vmimages/tools-isoimages/windows.iso /vmfs/volumes/{{ esxi_local_datastore }}'
+    register: vmwtoolsiso
+    changed_when: false
+    ignore_errors: yes    
+  - name: Download the server ISO
+    shell: 'wget -P /vmfs/volumes/{{ esxi_local_datastore }} {{ windows_iso_url }}'
+    register: wgetiso
+    changed_when: false
+    ignore_errors: yes
+  - name: Create a virtual machine on given ESXi hostname
+    vmware_guest:
+      hostname: '{{ esxi_address }}'
+      username: '{{ esxi_username }}'
+      password: '{{ lab_password }}'
+      validate_certs: no 
+      folder: /
+      name: test_vm_0006
+      state: poweredoff
+      guest_id: windows9Server64Guest
+      # This is hostname of particular ESXi server on which user wants VM to be deployed
+      #esxi_hostname: "{{ esxi_address }}"
+      cdrom:
+        type: iso
+        iso_path: '[datastore1] {{ windows_iso }}'
+      # - type: iso
+      #   iso_path: '[datastore1] windows.iso'
+      disk:
+      - size_gb: 40
+        type: thin
+        datastore: datastore1
+      hardware:
+        memory_mb: 2048
+        num_cpus: 2
+        scsi: lsilogicsas
+      networks:
+      - name: VM Network
+        #mac: aa:bb:dd:aa:00:14
+        #ip: 10.10.10.100
+        #netmask: 255.255.255.0
+        device_type: e1000
+      wait_for_ip_address: no
+    delegate_to: localhost
+    register: deploy_vm
+  - name: Change virtual machine's boot order and related parameters
+    vmware_guest_boot_manager:
+      hostname: '{{ esxi_address }}'
+      username: '{{ esxi_username }}'
+      password: '{{ lab_password }}'
+      validate_certs: no 
+      name: test_vm_0006
+      boot_delay: 1000
+      enter_bios_setup: False
+      boot_retry_enabled: True
+      boot_retry_delay: 22300
+      boot_firmware: bios
+      secure_boot_enabled: False
+      boot_order:
+        - cdrom
+        - disk
+        - ethernet
+        - floppy
+    delegate_to: localhost
+    register: vm_boot_order
 - hosts: localhost
   name: Deploy DC from OVA
   vars:
     validate_certs: no
-    dc_ova: "/Users/shatfiel/Downloads/NUCLab/Server2016/Server2016.ovf"
+    dc_ova: "/Users/shatfiel/Downloads/NUCLab/Server2016/Server2016x.ovf"
   vars_files: 
     vars.yml
   gather_facts: no

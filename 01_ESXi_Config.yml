@@ -98,8 +98,20 @@
     register: vibs
     changed_when: false
     ignore_errors: yes
+  - name: Configure ESXi hostname and public DNS servers
+    vmware_dns_config:
+      hostname: '{{ esxi_address }}'
+      username: '{{ esxi_username }}'
+      password: '{{ lab_password }}'
+      validate_certs: no 
+      change_hostname_to: '{{ esxi_hostname }}'
+      domainname: '{{ lab_domain }}'
+      dns_servers:
+      - 8.8.8.8
+      - 8.8.4.4
+    delegate_to: localhost
   - name: Reboot-Host
-    vmware_host_powerstate:
+      vmware_host_powerstate:
       hostname: '{{ esxi_address }}'
       username: '{{ esxi_username }}'
       password: '{{ lab_password }}'
@@ -115,6 +127,39 @@
       delay: 120
       timeout: 300
     connection: local
+  # - name: Create a virtual machine on given ESXi hostname
+  #   vmware_guest:
+  #     hostname: '{{ esxi_address }}'
+  #     username: '{{ esxi_username }}'
+  #     password: '{{ lab_password }}'
+  #     validate_certs: no 
+  #     folder: /
+  #     name: test_vm_0001
+  #     state: poweredon
+  #     guest_id: windows9Server64Guest
+  #     # This is hostname of particular ESXi server on which user wants VM to be deployed
+  #     #esxi_hostname: "{{ esxi_address }}"
+  #     cdrom:
+  #       type: client
+  #       iso_path: '{{ dc_win_iso }}'
+  #     disk:
+  #     - size_gb: 40
+  #       type: thin
+  #       datastore: datastore1
+  #     hardware:
+  #       memory_mb: 2048
+  #       num_cpus: 2
+  #       #scsi: paravirtual
+  #     networks:
+  #     - name: VM Network
+  #       #mac: aa:bb:dd:aa:00:14
+  #       #ip: 10.10.10.100
+  #       #netmask: 255.255.255.0
+  #       device_type: vmxnet3
+  #     wait_for_ip_address: no
+  #   delegate_to: localhost
+  #   register: deploy_vm
+
 
 
 
