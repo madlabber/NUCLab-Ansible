@@ -89,12 +89,12 @@
 <component name="Microsoft-Windows-Security-SPP-UX" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 <SkipAutoActivation>true</SkipAutoActivation>
 </component>
-<component name="Microsoft-Windows-SQMApi" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-<CEIPEnabled>0</CEIPEnabled>
-</component>
-<component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-<ComputerName>-VM</ComputerName>
-</component>
+	<component name="Microsoft-Windows-SQMApi" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+		<CEIPEnabled>0</CEIPEnabled>
+	</component>
+	<component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+		<ComputerName>*</ComputerName>
+	</component>
 </settings>
 <settings pass="oobeSystem">
 	<component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
@@ -105,6 +105,7 @@
 			</Password>
 			<Enabled>true</Enabled>
 			<Username>administrator</Username>
+			<LogonCount>1</LogonCount>
 		</AutoLogon>
             <FirstLogonCommands>
                 <SynchronousCommand wcm:action="add">
@@ -124,6 +125,14 @@
                 <SynchronousCommand wcm:action="add">
                     <Order>4</Order>
                     <CommandLine>C:\Windows\temp\VMware-tools-10.3.5-10430147-x86_64.exe /S /v"/qn REBOOT=R"</CommandLine>
+                </SynchronousCommand>
+                <SynchronousCommand wcm:action="add">
+                    <Order>5</Order>
+                    <CommandLine>PowerShell "Invoke-WebRequest -Uri http://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1 -OutFile C:\Windows\temp\ConfigureRemotingForAnsible.ps1"</CommandLine>
+                </SynchronousCommand>
+                <SynchronousCommand wcm:action="add">
+                    <Order>6</Order>
+                    <CommandLine>PowerShell C:\Windows\temp\ConfigureRemotingForAnsible.ps1</CommandLine>
                 </SynchronousCommand>
             </FirstLogonCommands>
 		<OOBE>
@@ -151,7 +160,7 @@
 				</LocalAccount>
 			</LocalAccounts>
 		</UserAccounts>
-		<RegisteredOrganization>Madlabber</RegisteredOrganization>
+		<RegisteredOrganization>Default Organization</RegisteredOrganization>
 		<RegisteredOwner>administrator</RegisteredOwner>
 		<DisableAutoDaylightTimeSet>false</DisableAutoDaylightTimeSet>
 		<TimeZone>Pacific Standard Time</TimeZone>

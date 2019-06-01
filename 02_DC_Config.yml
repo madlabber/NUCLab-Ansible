@@ -1,13 +1,12 @@
 ---
-- name: Configure DC
-  hosts: win
-  vars_files:
-   - vars.yml
-  gather_facts: yes
-  tasks:
-  - set_fact:
-      ansible_winrm_server_cert_validation: ignore
-#
+- hosts: localhost 
+  name: Configure DC VM
+  gather_facts: false
+  vars:
+    validate_certs: no
+  vars_files: 
+    vars.yml
+  tasks: 
   - name: Get facts from given VM Name
     vmware_guest_facts:
       hostname: '{{ esxi_address }}'
@@ -18,24 +17,39 @@
       name: '{{ dc_hostname }}'
     delegate_to: localhost
     register: vmfacts_dc01
-  - debug: msg="DHCP Address - {{ vmfacts_dc01['instance']['ipv4'] }}"
-  - name: Use VMware Tools to enable WinRM, and set IP Address
-    local_action:
-      module: vmware_vm_shell
-      hostname: '{{ esxi_address }}'
-      username: '{{ esxi_username }}'
-      password: '{{ lab_password }}'
-      validate_certs: no
-      vm_username: Administrator
-      vm_password: '{{ lab_password }}'
-      vm_id: '{{ dc_hostname }}'
-      vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
-      vm_shell_args: "" 
-    with_items:
-      - '-command "& {Set-ExecutionPolicy Unrestricted}"'
-      - '-command "& {Invoke-Expression ((New-Object System.Net.Webclient).DownloadString(\"https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1\"))}"'
-      - '-command "Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled False"'
-      - "-command \"new-netipaddress -InterfaceIndex (get-netipaddress | where {$_.IPAddress -eq \"{{ vmfacts_dc01['instance']['ipv4'] }}\"}).InterfaceIndex -IPAddress {{ dc_address }} -prefixlength {{lab_netmask_cidr}} -defaultgateway {{ lab_gateway }}\""
+  - debug: msg="DHCP Address - {{ vmfacts_dc01['instance']['ipv4'] }}"   
+  - name: Add a host alias for the temp IP
+    add_host:
+      name: "{{ vmfacts_dc01['instance']['ipv4'] }}"
+      ansible_user: .\administrator
+      ansible_password: P@ssw0rd
+      ansible_connection: winrm
+      ansible_winrm_transport: ntlm
+      ansible_winrm_server_cert_validation: ignore
+      ansible_winrm_port: 5986
+  - name: Wait for system to become reachable over WinRM
+    wait_for_connection:
+      timeout: 900
+    delegate_to: "{{ vmfacts_dc01['instance']['ipv4'] }}"
+  - name: Disable IEESC for Administrators
+    win_regedit:
+      path: HKLM:\SOFTWARE\Microsoft\Active Setup\Installed Components\{A509B1A7-37EF-4b3f-8CFC-4F3A74704073}
+      name: IsInstalled
+      data: 0
+      type: dword 
+    delegate_to: "{{ vmfacts_dc01['instance']['ipv4'] }}"
+  - name: Change IP
+    win_shell: "new-netipaddress -InterfaceIndex (get-netipaddress | where {$_.IPAddress -eq \"{{ vmfacts_dc01['instance']['ipv4'] }}\"}).InterfaceIndex -IPAddress {{ dc_address }} -prefixlength {{lab_netmask_cidr}} -defaultgateway {{ lab_gateway }}"
+    delegate_to: "{{ vmfacts_dc01['instance']['ipv4'] }}"
+    ignore_errors: yes
+- name: Configure DC
+  hosts: win
+  vars_files:
+   - vars.yml
+  gather_facts: no
+  tasks:
+  - set_fact:
+      ansible_winrm_server_cert_validation: ignore
   - name: Wait for system to become reachable over WinRM
     wait_for_connection:
       timeout: 900

@@ -3,6 +3,7 @@ lab_password: "P@ssw0rd"
 lab_netmask: "255.255.255.0"
 lab_netmask_cidr: "24"
 lab_gateway: "172.16.108.2"
+lab_upstream_dns: "172.16.108.2"
 esxi_hostname: "esx01"
 esxi_fqdn: "esx01.fusion.lab"
 esxi_address: "172.16.108.40"
@@ -31,11 +32,12 @@ ontap_svm_address: "172.16.108.93"
 ontap_vol_labs: "labs"
 ontap_vol_install: "install"
 portal_home_dir: 'C:\vlab'
-portal_sitename: 'Mini Lab Portal'
+portal_sitename: 'Lab Portal'
 portal_rdpdomain: 'LAB'
 portal_rdpuser: 'administrator'
 windows_iso_url: "http://software-download.microsoft.com/download/pr/Windows_Server_2016_Datacenter_EVAL_en-us_14393_refresh.ISO"
 windows_iso: "Windows_Server_2016_Datacenter_EVAL_en-us_14393_refresh.ISO"
+windows_floppy: "/Users/shatfiel/Downloads/NUCLab/floppy.flp"
 windows_vmwtools_url: "http://packages.vmware.com/tools/esx/6.7u2/windows/VMware-tools-windows-10.3.5-10430147.iso"
 windows_vmwtools_iso: "VMware-tools-windows-10.3.5-10430147.iso"
 windows_vmwtools_exe: "https://packages.vmware.com/tools/esx/6.7u2/windows/x64/VMware-tools-10.3.5-10430147-x86_64.exe"
