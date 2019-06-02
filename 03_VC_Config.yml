@@ -35,6 +35,17 @@
       enable_drs: yes
       enable_vsan: no
     delegate_to: localhost
+  - name: Configure ESXi hostname and private DNS servers
+    vmware_dns_config:
+      hostname: '{{ esxi_address }}'
+      username: '{{ esxi_username }}'
+      password: '{{ lab_password }}'
+      validate_certs: no 
+      change_hostname_to: '{{ esxi_hostname }}'
+      domainname: '{{ lab_domain }}'
+      dns_servers:
+      - '{{ dc_address }}'
+    delegate_to: localhost
   - name: Add ESXi Host to vCenter
     vmware_host:
       hostname: '{{ vcenter_address }}'
@@ -47,4 +58,8 @@
       esxi_password: '{{ lab_password }}'
       validate_certs: '{{ validate_certs }}'
       state: present
+    delegate_to: localhost
+# a brief pause for things to settle
+  - name: sleep for 60 seconds and continue with play
+    wait_for: timeout=60
     delegate_to: localhost

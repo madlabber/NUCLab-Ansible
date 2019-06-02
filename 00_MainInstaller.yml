@@ -1,0 +1,21 @@
+---
+- hosts: localhost
+  tasks:
+- name: Configure ESX
+  import_playbook: 01_ESXi_Config.yml
+- name: Deploy DC VM
+  import_playbook: 02_DC_Deploy.yml
+- name: Configure DC VM
+  import_playbook: 02_DC_Config.yml
+- name: Deploy VC VM
+  import_playbook: 03_VC_Deploy.yml
+- name: Configure VC VM
+  import_playbook: 03_VC_Config.yml
+- name: Deploy OTS VM
+  import_playbook: 04_OTS_Deploy.yml
+- name: Configure OTS VM
+  import_playbook: 04_OTS_Configure.yml
+- name: Integration
+  import_playbook: 05_Integration.yml
+- name: Integration
+  import_playbook: 06_Portal.yml

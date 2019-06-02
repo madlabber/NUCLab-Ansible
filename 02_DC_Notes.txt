@@ -1,30 +1,16 @@
 
-This playbook configures a windows server to provide Active Directory and DNS services for the lab infrastructure components.
+This playbook builds and configures a windows server to provide Active Directory and DNS services for the lab infrastructure components.
 
 Prerequisits:
-1. A Windows server VM Template, preconfigured to support Ansible.  
-    Windows Server Template build plan:
-    - Upload Windows Server 2016 ISO to the datastore
-    - create new VM, server 2016, 60GB HDD, 2gb ram, 2 vcpu.
-    - Attach datastore iso and boot the VM
-    - install standard edition with desktop
-    - install vmware tools
-    - Run this script:
-        https://github.com/ansible/ansible/blob/devel/examples/scripts/ConfigureRemotingForAnsible.ps1
-    - Run sysprep, generalize, and shutdown
-    - Export the VM as an OVF
-
+1. The host must have a working internet connection
 2. Customize vars.yml as required
-
 3. Customize the inventory file as required
 
 Deploying the VM:
-1. Deploy the template
-    - set a static IP matching the vars.yml
-
-2. Run the playbook
+1. Run the Deploy playbook
+     ansible-playbook -i inventory 02_DC_Deploy.yml
+1. Run the Config playbook
      ansible-playbook -i inventory 02_DC_Config.yml
-
 Note: 
   Ansible on OSX may require the following to work with winrm:
     export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
