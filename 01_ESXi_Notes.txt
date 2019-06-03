@@ -6,6 +6,7 @@ Prerequisits:
 2. pyvmomi module (required by the VMware Ansible modules)
      pip install pyvmomi
 3. ESX must be installed and the IP/hostname/dns must be configured in the console interface (DCUI)
+4. The clock on the ESXi host should be set prior to proceeding with configuration, otherwise the vcenter deployment may fail.
 
 Running the playbook:
 1. Edit the vars.yml file as required

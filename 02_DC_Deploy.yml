@@ -1,6 +1,7 @@
 ---
 - name: prep ESX host
   hosts: localhost
+  gather_facts: false
   vars_files: 
     vars.yml
   tasks: 
@@ -21,19 +22,19 @@
       dns_servers:
       - '{{ lab_upstream_dns }}'
     delegate_to: localhost
-  - name: Download the server ISO
+  - name: Download the Windows Server ISO
     shell: 'wget -P /vmfs/volumes/{{ esxi_local_datastore }} {{ windows_iso_url }}'
     args:
-      creates: '/vmfs/volumes/{{ esxi_local_datastore }}/{{ windows_iso_url }}'
-    register: wgetiso
-    ignore_errors: yes
+      creates: '/vmfs/volumes/{{ esxi_local_datastore }}/{{ windows_iso }}'
+  #  register: wgetiso
+  #  ignore_errors: yes
     delegate_to: '{{ esxi_address }}'
-  - name: Copy floppy.flp to datastore
+  - name: Copy autounattend floppy.flp to datastore
     copy:
       src: '{{ windows_floppy }}'
       dest: '/vmfs/volumes/{{ esxi_local_datastore }}/floppy.flp'
     delegate_to: '{{ esxi_address }}'
-  - name: Create a virtual machine on given ESXi hostname
+  - name: Create a new virtual machine on the ESXi Host
     vmware_guest:
       hostname: '{{ esxi_address }}'
       username: '{{ esxi_username }}'
@@ -106,7 +107,6 @@
       state: powered-on
     delegate_to: localhost
     register: powerstate
-    delegate_to: localhost
   - name: Wait for VMware tools to become available by name
     vmware_guest_tools_wait:
       hostname: '{{ esxi_address }}'

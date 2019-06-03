@@ -1,16 +1,15 @@
 
-This playbook builds and configures a windows server to provide Active Directory and DNS services for the lab infrastructure components.
+These playbooks build and configure a windows server to provide Active Directory and DNS services for the lab infrastructure components.
 
 Prerequisits:
 1. The host must have a working internet connection
 2. Customize vars.yml as required
-3. Customize the inventory file as required
 
 Deploying the VM:
 1. Run the Deploy playbook
-     ansible-playbook -i inventory 02_DC_Deploy.yml
+     ansible-playbook 02_DC_Deploy.yml
 1. Run the Config playbook
-     ansible-playbook -i inventory 02_DC_Config.yml
+     ansible-playbook 02_DC_Config.yml
 Note: 
   Ansible on OSX may require the following to work with winrm:
     export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES

@@ -5,6 +5,7 @@
   vars:
     https: true
     validate_certs: false
+    esxi_fqdn: '{{esxi_hostname}}.{{lab_domain}}'
   vars_files: 
     vars.yml
   tasks: 

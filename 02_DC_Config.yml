@@ -7,7 +7,7 @@
   vars_files: 
     vars.yml
   tasks: 
-  - name: Get facts from given VM Name
+  - name: Find the VM's IP Address
     vmware_guest_facts:
       hostname: '{{ esxi_address }}'
       username: '{{ esxi_username }}'
@@ -22,7 +22,7 @@
     add_host:
       name: "{{ vmfacts_dc01['instance']['ipv4'] }}"
       ansible_user: .\administrator
-      ansible_password: P@ssw0rd
+      ansible_password: '{{ lab_password }}'
       ansible_connection: winrm
       ansible_winrm_transport: ntlm
       ansible_winrm_server_cert_validation: ignore
@@ -43,16 +43,26 @@
     delegate_to: "{{ vmfacts_dc01['instance']['ipv4'] }}"
     ignore_errors: yes
 - name: Configure DC
-  hosts: win
+  hosts: localhost
   vars_files:
    - vars.yml
   gather_facts: no
   tasks:
+  - name: Add a host entry for the DC
+    add_host:
+      name: "{{ dc_address }}"
+      ansible_user: .\administrator
+      ansible_password: '{{ lab_password }}'
+      ansible_connection: winrm
+      ansible_winrm_transport: ntlm
+      ansible_winrm_server_cert_validation: ignore
+      ansible_winrm_port: 5986
   - set_fact:
       ansible_winrm_server_cert_validation: ignore
   - name: Wait for system to become reachable over WinRM
     wait_for_connection:
       timeout: 900
+    delegate_to: "{{ dc_address }}"
   - name: Set upstream DNS server 
     win_dns_client:
       adapter_names: '*'
@@ -65,12 +75,14 @@
       name: IsInstalled
       data: 0
       type: dword 
+    delegate_to: "{{ dc_address }}"
   - name: Disable IEESC for Users
     win_regedit:
       path: HKLM:\SOFTWARE\Microsoft\Active Setup\Installed Components\{A509B1A8-37EF-4b3f-8CFC-4F3A74704073}
       name: IsInstalled
       data: 0
       type: dword 
+    delegate_to: "{{ dc_address }}"
   - name: Disable firewall for Domain, Public and Private profiles
     win_firewall:
       state: disabled
@@ -79,13 +91,16 @@
       - Private
       - Public
     tags: disable_firewall
+    delegate_to: "{{ dc_address }}"
   - name: Change the hostname 
     win_hostname:
       name: '{{ dc_hostname }}'
     register: res
+    delegate_to: "{{ dc_address }}"
   - name: Reboot
     win_reboot:
-    when: res.reboot_required     
+    when: res.reboot_required   
+    delegate_to: "{{ dc_address }}"  
   - name: Install Active Directory
     win_feature: >
          name=AD-Domain-Services
@@ -93,16 +108,19 @@
          include_sub_features=yes
          state=present
     register: result
+    delegate_to: "{{ dc_address }}"
   - name: Create Domain
     win_domain: >
        dns_domain_name='{{ lab_domain }}'
        safe_mode_password='{{ lab_password }}'
     register: ad
+    delegate_to: "{{ dc_address }}"
   - name: reboot server
     win_reboot:
      msg: "Installing AD. Rebooting..."
      pre_reboot_delay: 15
     when: ad.changed
+    delegate_to: "{{ dc_address }}"
   - name: Create static record for ESXi
     win_dns_record:
       name: '{{ esxi_hostname }}'
@@ -110,6 +128,7 @@
       state: present
       value: '{{ esxi_address }}'
       zone: '{{ lab_domain }}'
+    delegate_to: "{{ dc_address }}"
   - name: Create static record for vCenter
     win_dns_record:
       name: '{{ vcenter_hostname }}'
@@ -117,6 +136,7 @@
       state: present
       value: '{{ vcenter_address }}'
       zone: '{{ lab_domain }}'
+    delegate_to: "{{ dc_address }}"
   - name: Create static record for ONTAP
     win_dns_record:
       name: '{{ ontap_hostname }}'
@@ -124,13 +144,16 @@
       state: present
       value: '{{ ontap_address }}'
       zone: '{{ lab_domain }}'
+    delegate_to: "{{ dc_address }}"
   - name: Check for xRemoteDesktopAdmin Powershell module
     win_psmodule:
       name: xRemoteDesktopAdmin
       state: present
+    delegate_to: "{{ dc_address }}"
   - name: Windows | Enable Remote Desktop
     win_dsc:
       resource_name: xRemoteDesktopAdmin
       Ensure: present
       UserAuthentication: NonSecure
+    delegate_to: "{{ dc_address }}"
 
