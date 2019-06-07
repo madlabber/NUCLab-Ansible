@@ -8,6 +8,12 @@
   vars_files: 
     vars.yml
   tasks: 
+  - name: Copy the NetApp Powershell Toolkit installer (PSTK)
+    win_copy:
+      src: '{{local_assets_path}}/{{ portal_ntap_pstk_msi }}'
+      dest: 'c:\Windows\temp\{{ portal_ntap_pstk_msi }}'
+  # - name: install PSTK
+  #   raw: 'msiexec /qn /l* C:\Windows\Temp\pstk-log.txt /i c:\Windows\temp\{{ portal_ntap_pstk_msi }}'
   - name: download git-client
     win_get_url:
       url: 'https://github.com/git-for-windows/git/releases/download/v2.21.0.windows.1/Git-2.21.0-64-bit.exe'
