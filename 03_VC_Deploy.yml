@@ -29,12 +29,12 @@
         guestinfo.cis.appliance.net.dns.servers: '{{ dc_address }}' # Comma separated list of IP addresses of DNS servers.
     #    guestinfo.cis.appliance.ntp.servers: '0.vmware.pool.ntp.org' # Comma seperated list of hostnames or IP addresses of NTP Servers
         guestinfo.cis.appliance.root.passwd: '{{ lab_password }}' # Root Password
-        guestinfo.cis.appliance.ssh.enabled: 'True' # Enable SSH
+    #    guestinfo.cis.appliance.ssh.enabled: 'True' # Enable SSH
         guestinfo.cis.deployment.autoconfig: 'True' # Auto-configure after deployment
-        guestinfo.cis.vmdir.first-instance: 'True' # True to create a new SSO domain
-        guestinfo.cis.vmdir.username: 'administrator@vsphere.local'
-        guestinfo.cis.vmdir.domain-name: 'vsphere.local' # SSO Domain Name
-        guestinfo.cis.vmdir.site-name: 'site01' # SSO Site Name
+    #    guestinfo.cis.vmdir.first-instance: 'True' # True to create a new SSO domain
+    #    guestinfo.cis.vmdir.username: 'administrator@vsphere.local'
+    #    guestinfo.cis.vmdir.domain-name: 'vsphere.local' # SSO Domain Name
+    #    guestinfo.cis.vmdir.site-name: 'site01' # SSO Site Name
         guestinfo.cis.vmdir.password: '{{ lab_password }}' # SSO Admin Password
         domain: '{{ lab_domain }}'
     delegate_to: localhost
