@@ -3,46 +3,46 @@
   name: vCenter Configuration 
   gather_facts: false
   vars:
-    validate_certs: no
+    esxi_password: '{{ lab_password }}'
+    vcenter_password: '{{ lab_password }}'    
     vcenter_fqdn: "{{ vcenter_hostname }}.{{ lab_domain }}"
+    vcenter_net_prefix: '{{ lab_netmask_cidr }}'
+    vcenter_gateway: '{{ lab_gateway }}'
+    dns_servers: '{{ dc_address }}'
+    domain: '{{ lab_domain }}'
+    searchpath: ""
   vars_files: 
     vars.yml
   tasks:
   - vmware_deploy_ovf:
       hostname: '{{ esxi_address }}'
       username: '{{ esxi_username }}'
-      password: '{{ lab_password }}'
-      name: '{{ vcenter_hostname }}'
-      ovf: '{{ vcenter_ova }}'
+      password: '{{ esxi_password }}'
+      name: '{{ vcenter_hostname }}' # shortname, not FQDN
+      ovf: '{{ vcenter_ova }}' 
       wait_for_ip_address: true
       validate_certs: no
       inject_ovf_env: true
       properties:
-        DeploymentOption.value: 'tiny' # tiny,small,medium,large,management-tiny,management-small,management-medium,management-large,infrastructure
-        IpAssignment.IpProtocol: 'IPv4' # IP Protocol
-        guestinfo.cis.appliance.net.addr.family: 'ipv4' # IP Address Family
-        guestinfo.cis.appliance.net.mode: 'static' # IP Address Mode
-        guestinfo.cis.appliance.net.addr: '{{ vcenter_address }}' # IP Address 
-        guestinfo.cis.appliance.net.pnid: '{{ vcenter_fqdn }}' # IP PNID (same as IP Address if there's no DNS)
-        guestinfo.cis.appliance.net.prefix: '{{ lab_netmask_cidr }}' # IP Network Prefix (CIDR notation)
-        guestinfo.cis.appliance.net.gateway: '{{ lab_gateway }}' # IP Gateway
-        guestinfo.cis.appliance.net.dns.servers: '{{ dc_address }}' # Comma separated list of IP addresses of DNS servers.
-    #    guestinfo.cis.appliance.ntp.servers: '0.vmware.pool.ntp.org' # Comma seperated list of hostnames or IP addresses of NTP Servers
-        guestinfo.cis.appliance.root.passwd: '{{ lab_password }}' # Root Password
-    #    guestinfo.cis.appliance.ssh.enabled: 'True' # Enable SSH
+        DeploymentOption.value: 'tiny' # vCenter t-shirt size: tiny,small,medium,large, or infrastructure 
+        guestinfo.cis.appliance.net.addr.family: 'ipv4' # ipv4 or ipv6
+        guestinfo.cis.appliance.net.mode: 'static' # static or dhcp
+        guestinfo.cis.appliance.net.addr: '{{ vcenter_address }}' 
+        guestinfo.cis.appliance.net.pnid: "{{ vcenter_hostname }}.{{ domain }}" # FQDN of vcenter server
+        guestinfo.cis.appliance.net.prefix: '{{ vcenter_net_prefix }}' # netmask length, CIDR notation, i.e. '24'
+        guestinfo.cis.appliance.net.gateway: '{{ vcenter_gateway }}' 
+        guestinfo.cis.appliance.net.dns.servers: '{{ dns_servers }}' # Comma separated list of IP addresses of DNS servers.
+        guestinfo.cis.appliance.root.passwd: '{{ vcenter_password }}' 
         guestinfo.cis.deployment.autoconfig: 'True' # Auto-configure after deployment
-    #    guestinfo.cis.vmdir.first-instance: 'True' # True to create a new SSO domain
-    #    guestinfo.cis.vmdir.username: 'administrator@vsphere.local'
-    #    guestinfo.cis.vmdir.domain-name: 'vsphere.local' # SSO Domain Name
-    #    guestinfo.cis.vmdir.site-name: 'site01' # SSO Site Name
-        guestinfo.cis.vmdir.password: '{{ lab_password }}' # SSO Admin Password
-        domain: '{{ lab_domain }}'
+        guestinfo.cis.vmdir.password: '{{ vcenter_password }}' # SSO Password for administrator@vsphere.local
+        domain: '{{ domain }}'
+        searchpath: '{{ searchpath }}'
     delegate_to: localhost
   - name: Wait for vCenter
     vmware_about_facts:
       hostname: '{{ vcenter_address }}'
-      username: '{{ vcenter_username }}'
-      password: '{{ lab_password }}'
+      username: 'administrator@vsphere.local'
+      password: '{{ vcenter_password }}'
       validate_certs: no
     delegate_to: localhost
     retries: 20
