@@ -4,6 +4,7 @@
   gather_facts: false
   vars:
     validate_certs: no
+    vcenter_fqdn: "{{ vcenter_hostname }}.{{ lab_domain }}"
   vars_files: 
     vars.yml
   tasks:
@@ -26,7 +27,7 @@
         guestinfo.cis.appliance.net.prefix: '{{ lab_netmask_cidr }}' # IP Network Prefix (CIDR notation)
         guestinfo.cis.appliance.net.gateway: '{{ lab_gateway }}' # IP Gateway
         guestinfo.cis.appliance.net.dns.servers: '{{ dc_address }}' # Comma separated list of IP addresses of DNS servers.
-        guestinfo.cis.appliance.ntp.servers: '0.vmware.pool.ntp.org' # Comma seperated list of hostnames or IP addresses of NTP Servers
+    #    guestinfo.cis.appliance.ntp.servers: '0.vmware.pool.ntp.org' # Comma seperated list of hostnames or IP addresses of NTP Servers
         guestinfo.cis.appliance.root.passwd: '{{ lab_password }}' # Root Password
         guestinfo.cis.appliance.ssh.enabled: 'True' # Enable SSH
         guestinfo.cis.deployment.autoconfig: 'True' # Auto-configure after deployment

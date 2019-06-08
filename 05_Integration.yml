@@ -1,5 +1,5 @@
 ---
-- hosts: win
+- hosts: localhost
   gather_facts: false
   name: Integration Tasks
   vars:
@@ -59,35 +59,46 @@
       hardware:
         memory_reservation_lock: true
     delegate_to: localhost
-- hosts: esx
+- hosts: localhost
   vars_files: 
     vars.yml
   tasks:
+  - add_host:
+      name: '{{ esxi_address }}'
+      group: "esx"
+      ansible_user: '{{ esxi_username }}'
+      ansible_password: '{{ lab_password }}'
+      ansible_ssh_common_args: '-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
   - name: Enable Autostart
     shell: vim-cmd hostsvc/autostartmanager/enable_autostart true
     register: autostartmanager
     changed_when: false
     ignore_errors: yes
+    delegate_to: '{{ esxi_address }}'
   - name: Update Autostart defaults
     shell: vim-cmd hostsvc/autostartmanager/update_defaults "120" "120" "guestShutdown" "yes"
     register: autostartmanager
     changed_when: false
     ignore_errors: yes
+    delegate_to: '{{ esxi_address }}'
   - name: Set Autostart order for ONTAP Select
     shell: 'vim-cmd hostsvc/autostartmanager/update_autostartentry $(vim-cmd vmsvc/getallvms | grep {{ ontap_hostname }} | cut -d" " -f1) "powerOn" "120" "1" "guestShutdown" "120" "yes"'
     register: autostartmanager
     changed_when: false
     ignore_errors: yes
+    delegate_to: '{{ esxi_address }}'
   - name: Set Autostart order for DC
     shell: 'vim-cmd hostsvc/autostartmanager/update_autostartentry $(vim-cmd vmsvc/getallvms | grep {{ dc_hostname }} | cut -d" " -f1) "powerOn" "120" "2" "guestShutdown" "120" "yes"'
     register: autostartmanager
     changed_when: false
     ignore_errors: yes
+    delegate_to: '{{ esxi_address }}'
   - name: Set Autostart order for vCenter
     shell: 'vim-cmd hostsvc/autostartmanager/update_autostartentry $(vim-cmd vmsvc/getallvms | grep {{ vcenter_hostname }} | cut -d" " -f1) "powerOn" "120" "3" "guestShutdown" "120" "yes"'
     register: autostartmanager
     changed_when: false
     ignore_errors: yes
+    delegate_to: '{{ esxi_address }}'
 
 
 

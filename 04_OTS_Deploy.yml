@@ -1,8 +1,9 @@
 ---
 - hosts: localhost 
-  name: Deploy ONTAP Select 
+  name: Deploy ONTAP Select Single Node Cluster
   vars:
     validate_certs: no
+    ontap_node_name: "{{ ontap_hostname }}-01"
   vars_files: 
     vars.yml
   tasks:

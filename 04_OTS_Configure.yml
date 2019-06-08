@@ -5,6 +5,7 @@
   vars:
     https: true
     validate_certs: false
+    ontap_node_name: "{{ ontap_hostname }}-01"
   vars_files: 
     vars.yml
   tasks:
