@@ -115,4 +115,7 @@
       validate_certs: no
       name: '{{ dc_hostname }}'
     delegate_to: localhost
-    register: facts
+    retries: 3
+    delay: 15
+    register: result           
+    until: result is succeeded 
