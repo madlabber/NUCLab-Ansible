@@ -22,6 +22,7 @@
       validate_certs: no
       inject_ovf_env: true
       properties:
+        DeploymentOption.value: 'ONTAPSelectEVALSmall' # <=9.5 use 'ONTAPSelectEVAL', 9.6+ use 'ONTAPSelectEVALSmall'
         clustername: '{{ ontap_hostname }}'
         Data-disk: '100'
         cluster_mgmt_ipaddr: '{{ ontap_address }}' 

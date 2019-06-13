@@ -3,12 +3,13 @@ These playbooks build and configure a windows server to provide Active Directory
 
 Prerequisits:
 1. The host must have a working internet connection
-2. Customize vars.yml as required
+2. The Ansible controller must have pywinrm installed
+3. Customize vars.yml as required
 
 Deploying the VM:
 1. Run the Deploy playbook
      ansible-playbook 02_DC_Deploy.yml
-1. Run the Config playbook
+2. Run the Config playbook
      ansible-playbook 02_DC_Config.yml
 Note: 
   Ansible on OSX may require the following to work with winrm:
