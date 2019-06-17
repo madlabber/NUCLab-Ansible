@@ -4,32 +4,46 @@
   vars_files: 
     vars.yml
   tasks:
-    # - name: Enable WinRM to be used with Ansible 
-    #   local_action:
-    #     module: vmware_vm_shell
-    #     hostname: 172.16.108.40
-    #     username: root
-    #     password: "P@ssw0rd" 
-    #     validate_certs: no
-    #     vm_username: Administrator
-    #     vm_password: "P@ssw0rd"
-    #     vm_id: DC01
-    #     vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
-    #     vm_shell_args: "" 
-    #   with_items:
-    #   #  - '-command "& {Set-ExecutionPolicy Unrestricted}"'
-    #   #  - '-command "& {Invoke-Expression ((New-Object System.Net.Webclient).DownloadString(\"https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1\"))}"'
-    #     - '-command "& {Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled False}"'
+  # - name: Enable WinRM to be used with Ansible 
+  #   local_action:
+  #     module: vmware_vm_shell
+  #     hostname: 172.16.108.20
+  #     username: root
+  #     password: "VMware1!" 
+  #     validate_certs: no
+  #     vm_username: .\Administrator
+  #     vm_password: "VMware1!"
+  #     vm_id: dc01
+  #     vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
+  #     vm_shell_args: '-command "(new-netipaddress -InterfaceAlias Ethernet0 -IPAddress {{ dc_address }} -prefixlength {{lab_netmask_cidr}} -defaultgateway {{ lab_gateway }})"'
+  - name: Set Password 
+    local_action:
+      module: vmware_vm_shell
+      hostname: 172.16.108.20
+      username: root
+      password: "VMware1!" 
+      validate_certs: no
+      vm_username: .\Administrator
+      vm_password: "Changeme!"
+      vm_id: dc01
+      vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
+      vm_shell_args: '-command "(net user Administrator Debugger123)"'
+
+    #with_items:
+      #  - '-command "& {Set-ExecutionPolicy Unrestricted}"'
+      #  - '-command "& {Invoke-Expression ((New-Object System.Net.Webclient).DownloadString(\"https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1\"))}"'
+      #  - '-command "& {Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled False}"'
+    #- '-command "(New-Item -Path c:\ -Name logfiles2 -ItemType directory)"'
 
     #   #  - '-command "& {Set-ExecutionPolicy RemoteSigned}"'
-  - name: Provide information about vCenter
-    vmware_about_facts:
-      hostname: '{{ vcenter_address }}'
-      username: '{{ vcenter_username }}'
-      password: '{{ lab_password }}'
-      validate_certs: no
-    delegate_to: localhost
-    retries: 15
-    delay: 60
-    register: result           
-    until: result is succeeded 
+  # - name: Provide information about vCenter
+  #   vmware_about_facts:
+  #     hostname: '{{ vcenter_address }}'
+  #     username: '{{ vcenter_username }}'
+  #     password: '{{ lab_password }}'
+  #     validate_certs: no
+  #   delegate_to: localhost
+  #   retries: 15
+  #   delay: 60
+  #   register: result           
+  #   until: result is succeeded 

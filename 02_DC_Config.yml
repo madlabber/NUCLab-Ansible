@@ -1,13 +1,91 @@
 ---
-- hosts: localhost 
-  name: Configure DC VM
+- name: Customize Guest
+  hosts: localhost 
   gather_facts: false
   vars:
     validate_certs: no
   vars_files: 
     vars.yml
   tasks: 
-  - name: Find the VM's IP Address
+  - name: Set password via vmware_vm_shell
+    local_action:
+      module: vmware_vm_shell
+      hostname: '{{ esxi_address }}'
+      username: '{{ esxi_username }}'
+      password: '{{ lab_password }}'
+      validate_certs: no
+      vm_username: Administrator
+      vm_password: '{{ temporary_password }}'
+      vm_id: '{{ dc_hostname }}'
+      vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
+      vm_shell_args: '-command "(net user Administrator {{ lab_password }})"'
+      wait_for_process: true
+    ignore_errors: yes
+  - name: Configure IP address via vmware_vm_shell
+    local_action:
+      module: vmware_vm_shell
+      hostname: '{{ esxi_address }}'
+      username: '{{ esxi_username }}'
+      password: '{{ lab_password }}'
+      validate_certs: no
+      vm_username: Administrator
+      vm_password: '{{ lab_password }}'
+      vm_id: '{{ dc_hostname }}'
+      vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
+      vm_shell_args: '-command "(new-netipaddress -InterfaceAlias Ethernet0 -IPAddress {{ dc_address }} -prefixlength {{lab_netmask_cidr}} -defaultgateway {{ lab_gateway }})"' 
+      wait_for_process: true
+  - name: Configure DNS via vmware_vm_shell
+    local_action:
+      module: vmware_vm_shell
+      hostname: '{{ esxi_address }}'
+      username: '{{ esxi_username }}'
+      password: '{{ lab_password }}'
+      validate_certs: no
+      vm_username: Administrator
+      vm_password: '{{ lab_password }}'
+      vm_id: '{{ dc_hostname }}'
+      vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
+      vm_shell_args: '-command "(Set-DnsClientServerAddress -InterfaceAlias Ethernet0 -ServerAddresses {{ lab_upstream_dns }})"'
+      wait_for_process: true
+  - name: Rename Computer via vmware_vm_shell
+    local_action:
+      module: vmware_vm_shell
+      hostname: '{{ esxi_address }}'
+      username: '{{ esxi_username }}'
+      password: '{{ lab_password }}'
+      validate_certs: no
+      vm_username: Administrator
+      vm_password: '{{ lab_password }}'
+      vm_id: '{{ dc_hostname }}'
+      vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
+      vm_shell_args: '-command "(Rename-Computer -NewName {{ dc_hostname }})"'
+      wait_for_process: true
+  - name: Reboot-Guest
+    vmware_guest_powerstate:
+      hostname: '{{ esxi_address }}'
+      username: '{{ esxi_username }}'
+      password: '{{ lab_password }}'
+      validate_certs: no  
+      name: '{{ dc_hostname }}'
+      state: reboot-guest
+    delegate_to: localhost
+    register: deploy
+  - name: Wait for 30 seconds
+    wait_for: timeout=30
+    delegate_to: localhost
+  - name: Wait for VMware tools to become available by name
+    vmware_guest_tools_wait:
+      hostname: '{{ esxi_address }}'
+      username: '{{ esxi_username }}'
+      password: '{{ lab_password }}'
+      validate_certs: no
+      name: '{{ dc_hostname }}'
+    delegate_to: localhost
+    retries: 3
+    delay: 15
+    register: result           
+    until: result is succeeded 
+  - name: Find the VM's IP Address via VMware tools
     vmware_guest_facts:
       hostname: '{{ esxi_address }}'
       username: '{{ esxi_username }}'
@@ -17,38 +95,14 @@
       name: '{{ dc_hostname }}'
     delegate_to: localhost
     register: vmfacts_dc01
-  - debug: msg="DHCP Address - {{ vmfacts_dc01['instance']['ipv4'] }}"   
-  - name: Add a host alias for the temp IP
-    add_host:
-      name: "{{ vmfacts_dc01['instance']['ipv4'] }}"
-      ansible_user: .\administrator
-      ansible_password: '{{ lab_password }}'
-      ansible_connection: winrm
-      ansible_winrm_transport: ntlm
-      ansible_winrm_server_cert_validation: ignore
-      ansible_winrm_port: 5986
-  - name: Wait for system to become reachable over WinRM
-    wait_for_connection:
-      timeout: 900
-    delegate_to: "{{ vmfacts_dc01['instance']['ipv4'] }}"
-  - name: Disable IEESC for Administrators
-    win_regedit:
-      path: HKLM:\SOFTWARE\Microsoft\Active Setup\Installed Components\{A509B1A7-37EF-4b3f-8CFC-4F3A74704073}
-      name: IsInstalled
-      data: 0
-      type: dword 
-    delegate_to: "{{ vmfacts_dc01['instance']['ipv4'] }}"
-  - name: Change IP
-    win_shell: "new-netipaddress -InterfaceIndex (get-netipaddress | where {$_.IPAddress -eq \"{{ vmfacts_dc01['instance']['ipv4'] }}\"}).InterfaceIndex -IPAddress {{ dc_address }} -prefixlength {{lab_netmask_cidr}} -defaultgateway {{ lab_gateway }}"
-    delegate_to: "{{ vmfacts_dc01['instance']['ipv4'] }}"
-    ignore_errors: yes
-- name: Configure DC
+  - debug: msg="IP Address - {{ vmfacts_dc01['instance']['ipv4'] }}"   
+- name: Create new Active-Directory Domain & Forest
   hosts: localhost
   vars_files:
    - vars.yml
   gather_facts: no
   tasks:
-  - name: Add a host entry for the DC
+  - name: Add host to Ansible inventory
     add_host:
       name: '{{ dc_address }}'
       ansible_user: .\administrator
@@ -57,32 +111,16 @@
       ansible_winrm_transport: ntlm
       ansible_winrm_server_cert_validation: ignore
       ansible_winrm_port: 5986
-  - set_fact:
-      ansible_winrm_server_cert_validation: ignore
   - name: Wait for system to become reachable over WinRM
     wait_for_connection:
       timeout: 900
     delegate_to: '{{ dc_address }}'
-  - name: Set upstream DNS server 
-    win_dns_client:
-      adapter_names: '*'
-      ipv4_addresses:
-      - '{{ lab_gateway }}'
-    delegate_to: '{{ dc_address }}'
-  - name: Disable IEESC for Administrators
-    win_regedit:
-      path: HKLM:\SOFTWARE\Microsoft\Active Setup\Installed Components\{A509B1A7-37EF-4b3f-8CFC-4F3A74704073}
-      name: IsInstalled
-      data: 0
-      type: dword 
-    delegate_to: '{{ dc_address }}'
-  - name: Disable IEESC for Users
-    win_regedit:
-      path: HKLM:\SOFTWARE\Microsoft\Active Setup\Installed Components\{A509B1A8-37EF-4b3f-8CFC-4F3A74704073}
-      name: IsInstalled
-      data: 0
-      type: dword 
-    delegate_to: '{{ dc_address }}'
+  # - name: Set upstream DNS server 
+  #   win_dns_client:
+  #     adapter_names: '*'
+  #     ipv4_addresses:
+  #     - '{{ lab_upstream_dns }}'
+    # delegate_to: '{{ dc_address }}'
   - name: Disable firewall for Domain, Public and Private profiles
     win_firewall:
       state: disabled
@@ -92,15 +130,15 @@
       - Public
     tags: disable_firewall
     delegate_to: '{{ dc_address }}'
-  - name: Change the hostname 
-    win_hostname:
-      name: '{{ dc_hostname }}'
-    register: res
-    delegate_to: '{{ dc_address }}'
-  - name: Reboot
-    win_reboot:
-    when: res.reboot_required   
-    delegate_to: '{{ dc_address }}'
+  # - name: Change the hostname 
+  #   win_hostname:
+  #     name: '{{ dc_hostname }}'
+  #   register: res
+  #   delegate_to: '{{ dc_address }}'
+  # - name: Reboot
+  #   win_reboot:
+  #   when: res.reboot_required   
+  #   delegate_to: '{{ dc_address }}'
   - name: Install Active Directory
     win_feature: >
          name=AD-Domain-Services
@@ -121,7 +159,13 @@
      pre_reboot_delay: 15
     when: ad.changed
     delegate_to: "{{ dc_address }}"
-  - name: Create static record for ESXi
+  - name: Set internal DNS server 
+    win_dns_client:
+      adapter_names: '*'
+      ipv4_addresses:
+      - '127.0.0.1'
+    delegate_to: '{{ dc_address }}'
+  - name: Create DNS record for ESXi
     win_dns_record:
       name: '{{ esxi_hostname }}'
       type: "A"
@@ -129,7 +173,7 @@
       value: '{{ esxi_address }}'
       zone: '{{ lab_domain }}'
     delegate_to: "{{ dc_address }}"
-  - name: Create static record for vCenter
+  - name: Create DNS record for vCenter
     win_dns_record:
       name: '{{ vcenter_hostname }}'
       type: "A"
@@ -137,7 +181,7 @@
       value: '{{ vcenter_address }}'
       zone: '{{ lab_domain }}'
     delegate_to: "{{ dc_address }}"
-  - name: Create static record for ONTAP
+  - name: Create DNS record for ONTAP
     win_dns_record:
       name: '{{ ontap_hostname }}'
       type: "A"
@@ -150,7 +194,7 @@
       name: xRemoteDesktopAdmin
       state: present
     delegate_to: "{{ dc_address }}"
-  - name: Windows | Enable Remote Desktop
+  - name: Enable Remote Desktop
     win_dsc:
       resource_name: xRemoteDesktopAdmin
       Ensure: present

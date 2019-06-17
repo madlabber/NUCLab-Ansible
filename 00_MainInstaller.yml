@@ -19,4 +19,3 @@
   import_playbook: 05_Integration.yml
 - name: Integration
   import_playbook: 06_Portal.yml
-  
