@@ -3,6 +3,11 @@
   hosts: localhost
   gather_facts: false
   vars:
+    esxi_login: &esxi_login
+      hostname: '{{ esxi_address }}'
+      username: '{{ esxi_username }}'
+      password: '{{ lab_password }}'   
+      validate_certs: no     
     esxi_fqdn: '{{ esxi_hostname }}.{{ lab_domain }}'
   vars_files: 
     vars.yml
@@ -16,20 +21,13 @@
       ansible_ssh_common_args: '-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
   - name: Gather facts about ESXi Host services
     vmware_host_service_facts:
-      hostname: '{{ esxi_address }}'
-      username: '{{ esxi_username }}'
-      password: '{{ lab_password }}'
+      <<: *esxi_login
       esxi_hostname: '{{ esxi_fqdn }}'
-      validate_certs: no
     delegate_to: localhost
     register: host_services
-#  - debug: msg="{{ host_services | dict2items }}"
   - name: Configure ESXi hostname and public DNS servers
     vmware_dns_config:
-      hostname: '{{ esxi_address }}'
-      username: '{{ esxi_username }}'
-      password: '{{ lab_password }}'
-      validate_certs: no 
+      <<: *esxi_login 
       change_hostname_to: '{{ esxi_hostname }}'
       domainname: '{{ lab_domain }}'
       dns_servers:
@@ -37,23 +35,17 @@
     delegate_to: localhost
   - name: Enable ESX SSH (TSM-SSH)
     vmware_host_service_manager:
-      hostname: '{{ esxi_address }}'
-      username: '{{ esxi_username }}'
-      password: '{{ lab_password }}'
+      <<: *esxi_login
       esxi_hostname: '{{ esxi_address }}'
       service_name: TSM-SSH
       state: present
-      validate_certs: no
     delegate_to: localhost
   - name: Enable ESX Shell (TSM)
     vmware_host_service_manager:
-      hostname: '{{ esxi_address }}'
-      username: '{{ esxi_username }}'
-      password: '{{ lab_password }}'
+      <<: *esxi_login
       esxi_hostname: '{{ esxi_address }}'
       service_name: TSM
       state: present
-      validate_certs: no
     delegate_to: localhost
   - name: Download the Windows Server ISO
     shell: 'wget -P /vmfs/volumes/{{ esxi_local_datastore }} {{ windows_iso_url }}'
@@ -62,15 +54,12 @@
     delegate_to: '{{ esxi_address }}'
   - name: Copy autounattend floppy.flp to datastore
     copy:
-      src: '{{ windows_floppy }}'
+      src: '{{ files_path }}/{{ windows_floppy }}'
       dest: '/vmfs/volumes/{{ esxi_local_datastore }}/floppy.flp'
     delegate_to: '{{ esxi_address }}'
-  - name: Create a new virtual machine on the ESXi Host
+  - name: Create a new Server 2016 VM
     vmware_guest:
-      hostname: '{{ esxi_address }}'
-      username: '{{ esxi_username }}'
-      password: '{{ lab_password }}'
-      validate_certs: no 
+      <<: *esxi_login
       folder: /
       name: '{{ dc_hostname }}'
       state: poweredoff
@@ -94,10 +83,7 @@
     register: deploy_vm
   - name: Change virtual machine's boot order and related parameters
     vmware_guest_boot_manager:
-      hostname: '{{ esxi_address }}'
-      username: '{{ esxi_username }}'
-      password: '{{ lab_password }}'
-      validate_certs: no 
+      <<: *esxi_login 
       name: '{{ dc_hostname }}'
       boot_delay: 1000
       enter_bios_setup: False
@@ -130,22 +116,16 @@
     delegate_to: '{{ esxi_address }}'
   - name: Restore original service states
     vmware_host_service_manager:
-      hostname: '{{ esxi_address }}'
-      username: '{{ esxi_username }}'
-      password: '{{ lab_password }}'
+      <<: *esxi_login
       esxi_hostname: '{{ esxi_address }}'
       service_name: '{{ item.key }}'
       state: absent
-      validate_certs: no
     delegate_to: localhost
     loop: "{{ host_services['host_service_facts'][esxi_fqdn] }}"
     when: item.running|bool == false
   - name: Power-On the virtual machine
     vmware_guest_powerstate:
-      hostname: '{{ esxi_address }}'
-      username: '{{ esxi_username }}'
-      password: '{{ lab_password }}'
-      validate_certs: no
+      <<: *esxi_login
       name: '{{ dc_hostname }}'
       state: powered-on
     delegate_to: localhost

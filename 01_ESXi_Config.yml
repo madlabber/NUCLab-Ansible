@@ -3,9 +3,13 @@
   name: ESXi Configuration 
   gather_facts: false
   vars:
+    esxi_login: &esxi_login
+      hostname: '{{ esxi_address }}'
+      username: '{{ esxi_username }}'
+      password: '{{ lab_password }}'   
+      validate_certs: no 
     tsm_policy: on
     tsm_state: present
-    validate_certs: no
   vars_files: 
     vars.yml
   tasks: 
@@ -17,44 +21,24 @@
       ansible_ssh_common_args: '-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
   - name: Enable SSH (TSM-SSH)
     vmware_host_service_manager:
-      hostname: '{{ esxi_address }}'
-      username: '{{ esxi_username }}'
-      password: '{{ lab_password }}'
+      <<: *esxi_login
       esxi_hostname: '{{ esxi_address }}'
       service_name: TSM-SSH
       service_policy: '{{ tsm_policy }}'
       state: '{{ tsm_state }}'
-      validate_certs: no
     delegate_to: localhost
-  # - name: Enable DCUI 
-  #   vmware_host_service_manager:
-  #     hostname: '{{ esxi_address }}'
-  #     username: '{{ esxi_username }}'
-  #     password: '{{ lab_password }}'
-  #     esxi_hostname: '{{ esxi_address }}'
-  #     service_name: DCUI
-  #     service_policy: on
-  #     state: present
-  #     validate_certs: no
-  #   delegate_to: localhost
   - name: Enable ESX Shell (TSM)
     vmware_host_service_manager:
-      hostname: '{{ esxi_address }}'
-      username: '{{ esxi_username }}'
-      password: '{{ lab_password }}'
+      <<: *esxi_login
       esxi_hostname: '{{ esxi_address }}'
       service_name: TSM
       service_policy: '{{ tsm_policy }}'
       state: '{{ tsm_state }}'
-      validate_certs: no
     delegate_to: localhost
   - name: Set Advanced Options
     vmware_host_config_manager:
-      hostname: '{{ esxi_address }}'
-      username: '{{ esxi_username }}'
-      password: '{{ lab_password }}'
+      <<: *esxi_login
       esxi_hostname: '{{ esxi_address }}'
-      validate_certs: no
       options:
         "UserVars.SuppressShellWarning": 1 
         "Mem.ShareForceSalting": 0
@@ -62,11 +46,8 @@
     delegate_to: localhost
   - name: Set VSC Values
     vmware_host_config_manager:
-      hostname: '{{ esxi_address }}'
-      username: '{{ esxi_username }}'
-      password: '{{ lab_password }}'
+      <<: *esxi_login
       esxi_hostname: '{{ esxi_address }}'
-      validate_certs: no
       options:
         "Net.TcpipHeapSize": 32
         "Net.TcpipHeapMax": 512
@@ -81,30 +62,21 @@
     delegate_to: localhost
   - name: Manage Firewall Rules
     vmware_host_firewall_manager:
-      hostname: '{{ esxi_address }}'
-      username: '{{ esxi_username }}'
-      password: '{{ lab_password }}'
-      esxi_hostname: '{{ esxi_address }}'
-      validate_certs: no      
+      <<: *esxi_login
+      esxi_hostname: '{{ esxi_address }}'      
       rules:
         - name: remoteSerialPort 
           enabled: true
     delegate_to: localhost
   - name: Add an isolated VMWare vSwitch
     vmware_vswitch:
-      hostname: '{{ esxi_address }}'
-      username: '{{ esxi_username }}'
-      password: '{{ lab_password }}'
-      validate_certs: no 
+      <<: *esxi_login
       switch: vSwitch1
       mtu: 9000
     delegate_to: localhost
-  - name: Configure ESXi hostname and public DNS servers
+  - name: Configure ESXi hostname and upstream DNS servers
     vmware_dns_config:
-      hostname: '{{ esxi_address }}'
-      username: '{{ esxi_username }}'
-      password: '{{ lab_password }}'
-      validate_certs: no 
+      <<: *esxi_login
       change_hostname_to: '{{ esxi_hostname }}'
       domainname: '{{ lab_domain }}'
       dns_servers:
@@ -112,7 +84,7 @@
     delegate_to: localhost
   - name: Copy VAAI vib to esx host
     copy:
-      src: '{{ vaai_plugin }}'
+      src: '{{ files_path }}/{{ vaai_plugin }}'
       dest: '/vmfs/volumes/{{ esxi_local_datastore }}/NetAppNasPlugin.vib'
     delegate_to: '{{ esxi_address }}'
   - name: Install the VAAI vib 
@@ -124,11 +96,8 @@
     register: installvib
   - name: Reboot-Host
     vmware_host_powerstate:
-      hostname: '{{ esxi_address }}'
-      username: '{{ esxi_username }}'
-      password: '{{ lab_password }}'
-      esxi_hostname: '{{ esxi_address }}'
-      validate_certs: no   
+      <<: *esxi_login
+      esxi_hostname: '{{ esxi_address }}'   
       state: reboot-host
       force: yes
     delegate_to: localhost

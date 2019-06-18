@@ -1,101 +1,4 @@
 ---
-# - name: Customize Guest
-#   hosts: localhost 
-#   gather_facts: false
-#   vars:
-#     validate_certs: no
-#   vars_files: 
-#     vars.yml
-#   tasks: 
-#   - name: Set password via vmware_vm_shell
-#     local_action:
-#       module: vmware_vm_shell
-#       hostname: '{{ esxi_address }}'
-#       username: '{{ esxi_username }}'
-#       password: '{{ lab_password }}'
-#       validate_certs: no
-#       vm_username: Administrator
-#       vm_password: '{{ temporary_password }}'
-#       vm_id: '{{ dc_hostname }}'
-#       vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
-#       vm_shell_args: '-command "(net user Administrator {{ lab_password }})"'
-#       wait_for_process: true
-#     ignore_errors: yes
-#   - name: Configure IP address via vmware_vm_shell
-#     local_action:
-#       module: vmware_vm_shell
-#       hostname: '{{ esxi_address }}'
-#       username: '{{ esxi_username }}'
-#       password: '{{ lab_password }}'
-#       validate_certs: no
-#       vm_username: Administrator
-#       vm_password: '{{ lab_password }}'
-#       vm_id: '{{ dc_hostname }}'
-#       vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
-#       vm_shell_args: '-command "(new-netipaddress -InterfaceAlias Ethernet0 -IPAddress {{ dc_address }} -prefixlength {{lab_netmask_cidr}} -defaultgateway {{ lab_gateway }})"' 
-#       wait_for_process: true
-#   - name: Configure DNS via vmware_vm_shell
-#     local_action:
-#       module: vmware_vm_shell
-#       hostname: '{{ esxi_address }}'
-#       username: '{{ esxi_username }}'
-#       password: '{{ lab_password }}'
-#       validate_certs: no
-#       vm_username: Administrator
-#       vm_password: '{{ lab_password }}'
-#       vm_id: '{{ dc_hostname }}'
-#       vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
-#       vm_shell_args: '-command "(Set-DnsClientServerAddress -InterfaceAlias Ethernet0 -ServerAddresses {{ lab_upstream_dns }})"'
-#       wait_for_process: true
-#   - name: Rename Computer via vmware_vm_shell
-#     local_action:
-#       module: vmware_vm_shell
-#       hostname: '{{ esxi_address }}'
-#       username: '{{ esxi_username }}'
-#       password: '{{ lab_password }}'
-#       validate_certs: no
-#       vm_username: Administrator
-#       vm_password: '{{ lab_password }}'
-#       vm_id: '{{ dc_hostname }}'
-#       vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
-#       vm_shell_args: '-command "(Rename-Computer -NewName {{ dc_hostname }})"'
-#       wait_for_process: true
-#   - name: Reboot-Guest
-#     vmware_guest_powerstate:
-#       hostname: '{{ esxi_address }}'
-#       username: '{{ esxi_username }}'
-#       password: '{{ lab_password }}'
-#       validate_certs: no  
-#       name: '{{ dc_hostname }}'
-#       state: reboot-guest
-#     delegate_to: localhost
-#     register: deploy
-#   - name: Wait for 30 seconds
-#     wait_for: timeout=30
-#     delegate_to: localhost
-#   - name: Wait for VMware tools to become available by name
-#     vmware_guest_tools_wait:
-#       hostname: '{{ esxi_address }}'
-#       username: '{{ esxi_username }}'
-#       password: '{{ lab_password }}'
-#       validate_certs: no
-#       name: '{{ dc_hostname }}'
-#     delegate_to: localhost
-#     retries: 3
-#     delay: 15
-#     register: result           
-#     until: result is succeeded 
-#   - name: Find the VM's IP Address via VMware tools
-#     vmware_guest_facts:
-#       hostname: '{{ esxi_address }}'
-#       username: '{{ esxi_username }}'
-#       password: '{{ lab_password }}'
-#       datacenter: ha-datacenter
-#       validate_certs: no
-#       name: '{{ dc_hostname }}'
-#     delegate_to: localhost
-#     register: vmfacts_dc01
-#   - debug: msg="IP Address - {{ vmfacts_dc01['instance']['ipv4'] }}"   
 - name: Create new Active-Directory Domain & Forest
   hosts: localhost
   vars_files:
@@ -115,12 +18,12 @@
     wait_for_connection:
       timeout: 900
     delegate_to: '{{ dc_address }}'
-  # - name: Set upstream DNS server 
-  #   win_dns_client:
-  #     adapter_names: '*'
-  #     ipv4_addresses:
-  #     - '{{ lab_upstream_dns }}'
-    # delegate_to: '{{ dc_address }}'
+  - name: Set upstream DNS server 
+    win_dns_client:
+      adapter_names: '*'
+      ipv4_addresses:
+      - '{{ lab_upstream_dns }}'
+    delegate_to: '{{ dc_address }}'
   - name: Disable firewall for Domain, Public and Private profiles
     win_firewall:
       state: disabled
@@ -130,15 +33,15 @@
       - Public
     tags: disable_firewall
     delegate_to: '{{ dc_address }}'
-  # - name: Change the hostname 
-  #   win_hostname:
-  #     name: '{{ dc_hostname }}'
-  #   register: res
-  #   delegate_to: '{{ dc_address }}'
-  # - name: Reboot
-  #   win_reboot:
-  #   when: res.reboot_required   
-  #   delegate_to: '{{ dc_address }}'
+  - name: Change the hostname 
+    win_hostname:
+      name: '{{ dc_hostname }}'
+    register: res
+    delegate_to: '{{ dc_address }}'
+  - name: Reboot
+    win_reboot:
+    when: res.reboot_required   
+    delegate_to: '{{ dc_address }}'
   - name: Install Active Directory
     win_feature: >
          name=AD-Domain-Services

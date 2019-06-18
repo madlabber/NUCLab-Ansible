@@ -32,9 +32,10 @@ portal_rdpdomain: 'LAB'
 portal_rdpuser: 'administrator'
 windows_iso_url: "http://software-download.microsoft.com/download/pr/Windows_Server_2016_Datacenter_EVAL_en-us_14393_refresh.ISO"
 windows_iso: "Windows_Server_2016_Datacenter_EVAL_en-us_14393_refresh.ISO"
-windows_floppy: "/Users/shatfiel/Downloads/NUCLab/floppy.flp"
-vaai_plugin: /Users/shatfiel/Downloads/NUCLab/NetAppNasPlugin.v23.vib
+files_path: "/Users/lusid/Downloads/NUCLab"
+windows_floppy: "floppy.flp"
+vaai_plugin: NetAppNasPlugin.v23.vib
 vcenter_ova: "/Users/shatfiel/Downloads/NUCLab/VMware-vCenter-Server-Appliance-6.7.0.20000-10244745_OVF10.ova"
 ontap_select_ova: "/Users/shatfiel/Downloads/NUCLab/9.6RC1_DataONTAPv-esx-standalone-eval-nodar.ova"
-local_assets_path: "/Users/shatfiel/Downloads/NUCLab"
+
 portal_ntap_pstk_msi: "NetApp_PowerShell_Toolkit_9.6.0.msi"
