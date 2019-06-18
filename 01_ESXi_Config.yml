@@ -3,6 +3,8 @@
   name: ESXi Configuration 
   gather_facts: false
   vars:
+    tsm_policy: on
+    tsm_state: present
     validate_certs: no
   vars_files: 
     vars.yml
@@ -20,21 +22,21 @@
       password: '{{ lab_password }}'
       esxi_hostname: '{{ esxi_address }}'
       service_name: TSM-SSH
-      service_policy: on
-      state: present
+      service_policy: '{{ tsm_policy }}'
+      state: '{{ tsm_state }}'
       validate_certs: no
     delegate_to: localhost
-  - name: Enable DCUI 
-    vmware_host_service_manager:
-      hostname: '{{ esxi_address }}'
-      username: '{{ esxi_username }}'
-      password: '{{ lab_password }}'
-      esxi_hostname: '{{ esxi_address }}'
-      service_name: DCUI
-      service_policy: on
-      state: present
-      validate_certs: no
-    delegate_to: localhost
+  # - name: Enable DCUI 
+  #   vmware_host_service_manager:
+  #     hostname: '{{ esxi_address }}'
+  #     username: '{{ esxi_username }}'
+  #     password: '{{ lab_password }}'
+  #     esxi_hostname: '{{ esxi_address }}'
+  #     service_name: DCUI
+  #     service_policy: on
+  #     state: present
+  #     validate_certs: no
+  #   delegate_to: localhost
   - name: Enable ESX Shell (TSM)
     vmware_host_service_manager:
       hostname: '{{ esxi_address }}'
@@ -42,8 +44,8 @@
       password: '{{ lab_password }}'
       esxi_hostname: '{{ esxi_address }}'
       service_name: TSM
-      service_policy: on
-      state: present
+      service_policy: '{{ tsm_policy }}'
+      state: '{{ tsm_state }}'
       validate_certs: no
     delegate_to: localhost
   - name: Set Advanced Options
@@ -57,6 +59,15 @@
         "UserVars.SuppressShellWarning": 1 
         "Mem.ShareForceSalting": 0
         "Misc.BlueScreenTimeout": 60
+    delegate_to: localhost
+  - name: Set VSC Values
+    vmware_host_config_manager:
+      hostname: '{{ esxi_address }}'
+      username: '{{ esxi_username }}'
+      password: '{{ lab_password }}'
+      esxi_hostname: '{{ esxi_address }}'
+      validate_certs: no
+      options:
         "Net.TcpipHeapSize": 32
         "Net.TcpipHeapMax": 512
         "NFS.MaxVolumes": 256
@@ -65,6 +76,8 @@
         "NFS.HeartbeatMaxFailures": 10
         "NFS.HeartbeatFrequency": 12
         "NFS.HeartbeatTimeout": 5
+        "Disk.QFullSampleSize": 32
+        "Disk.QFullThreshold": 8
     delegate_to: localhost
   - name: Manage Firewall Rules
     vmware_host_firewall_manager:
