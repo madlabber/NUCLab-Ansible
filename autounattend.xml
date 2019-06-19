@@ -13,7 +13,7 @@ Modified to work with the 180day EVAL ISO:
 -Added <InstallFrom>...</InstallFrom> 
 -removed the <productkey> section 
 
-Modified to enable WinRM for Ansible
+Modified to enable WinRM for Ansible & install VMware Tools
 -Added <logoncount>1</logoncount>
 -Added <FirstLogonCommands>...</FirstLogonCommands>
 
