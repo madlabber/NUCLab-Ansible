@@ -44,7 +44,7 @@
         "UserVars.SuppressShellWarning": 1 
         "Mem.ShareForceSalting": 0
         "Misc.BlueScreenTimeout": 60
-        "RdmFilter.HbalsShared": 
+#        "RdmFilter.HbaisShared": 
     delegate_to: localhost
   - name: Set VSC Values
     vmware_host_config_manager:
