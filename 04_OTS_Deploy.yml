@@ -1,6 +1,7 @@
 ---
 - hosts: localhost 
   name: Deploy ONTAP Select Single Node Cluster
+  gather_facts: false
   vars:
     validate_certs: no
     ontap_node_name: "{{ ontap_hostname }}-01"
@@ -15,7 +16,7 @@
       cluster: '{{ vcenter_cluster }}'
       datastore: '{{ esxi_local_datastore }}'
       name: '{{ ontap_hostname }}'
-      ovf: '{{ ontap_select_ova }}'
+      ovf: '{{ files_path }}/{{ ontap_select_ova }}'
       disk_provisioning: thin
       power_on: no
       wait_for_ip_address: false

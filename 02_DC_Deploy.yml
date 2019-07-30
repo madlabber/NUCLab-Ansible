@@ -3,12 +3,25 @@
   hosts: localhost
   gather_facts: false
   vars:
+    esxi_password: '{{ lab_password }}'
+    esxi_fqdn: '{{ esxi_hostname }}.{{ lab_domain }}'
+    esxi_datastore: '{{ esxi_local_datastore }}'
+    vm_name: '{{ dc_hostname }}'
+    vm_disk_gb: 40
+    vm_memory_mb: 2048
+    vm_num_cpus: 2
+    vm_network: "VM Network"
+    vm_password_old: '{{ temporary_password }}'
+    vm_password_new: '{{ lab_password }}'
+    vm_address: '{{ dc_address }}'
+    vm_netmask_cidr: '{{ lab_netmask_cidr }}'
+    vm_gateway: '{{ lab_gateway }}'
+    vm_dns_server: '{{ lab_upstream_dns }}'
     esxi_login: &esxi_login
       hostname: '{{ esxi_address }}'
       username: '{{ esxi_username }}'
       password: '{{ lab_password }}'   
       validate_certs: no     
-    esxi_fqdn: '{{ esxi_hostname }}.{{ lab_domain }}'
   vars_files: 
     vars.yml
   tasks: 
@@ -17,7 +30,7 @@
       name: '{{ esxi_address }}'
       group: "esx"
       ansible_user: '{{ esxi_username }}'
-      ansible_password: '{{ lab_password }}'
+      ansible_password: '{{ esxi_password }}'
       ansible_ssh_common_args: '-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
   - name: Gather facts about ESXi Host services
     vmware_host_service_facts:
@@ -25,14 +38,6 @@
       esxi_hostname: '{{ esxi_fqdn }}'
     delegate_to: localhost
     register: host_services
-  - name: Configure ESXi hostname and public DNS servers
-    vmware_dns_config:
-      <<: *esxi_login 
-      change_hostname_to: '{{ esxi_hostname }}'
-      domainname: '{{ lab_domain }}'
-      dns_servers:
-      - '{{ lab_upstream_dns }}'
-    delegate_to: localhost
   - name: Enable ESX SSH (TSM-SSH)
     vmware_host_service_manager:
       <<: *esxi_login
@@ -48,43 +53,44 @@
       state: present
     delegate_to: localhost
   - name: Download the Windows Server ISO
-    shell: 'wget -P /vmfs/volumes/{{ esxi_local_datastore }} {{ windows_iso_url }}'
+    shell: 'wget -P /vmfs/volumes/{{ esxi_datastore }} {{ windows_iso_url }}'
     args:
-      creates: '/vmfs/volumes/{{ esxi_local_datastore }}/{{ windows_iso }}'
+      creates: '/vmfs/volumes/{{ esxi_datastore }}/{{ windows_iso }}'
     delegate_to: '{{ esxi_address }}'
-  - name: Copy autounattend floppy.flp to datastore
-    copy:
-      src: '{{ files_path }}/{{ windows_floppy }}'
-      dest: '/vmfs/volumes/{{ esxi_local_datastore }}/floppy.flp'
+  - name: Download the autounattend floppy .flp
+    shell: 'wget -P /vmfs/volumes/{{ esxi_datastore }} {{ windows_flp_url }}'
+    args:
+      creates: '/vmfs/volumes/{{ esxi_datastore }}/{{ windows_flp }}'
     delegate_to: '{{ esxi_address }}'
   - name: Create a new Server 2016 VM
     vmware_guest:
       <<: *esxi_login
       folder: /
-      name: '{{ dc_hostname }}'
-      state: poweredoff
+      name: '{{ vm_name }}'
+      state: present
       guest_id: windows9Server64Guest
       cdrom:
         type: iso
-        iso_path: '[datastore1] {{ windows_iso }}'
+        iso_path: '[{{ esxi_datastore }}] {{ windows_iso }}'
       disk:
-      - size_gb: 40
+      - size_gb: '{{ vm_disk_gb }}'
         type: thin
-        datastore: datastore1
+        datastore: '{{ esxi_datastore }}'
       hardware:
-        memory_mb: 2048
-        num_cpus: 2
+        memory_mb: '{{ vm_memory_mb }}'
+        num_cpus: '{{ vm_num_cpus }}'
         scsi: lsilogicsas
       networks:
-      - name: VM Network
+      - name: '{{ vm_network }}'
         device_type: e1000
       wait_for_ip_address: no
     delegate_to: localhost
     register: deploy_vm
+#  - debug: msg="{{deploy_vm}}"
   - name: Change virtual machine's boot order and related parameters
     vmware_guest_boot_manager:
       <<: *esxi_login 
-      name: '{{ dc_hostname }}'
+      name: '{{ vm_name }}'
       boot_delay: 1000
       enter_bios_setup: False
       boot_retry_enabled: True
@@ -100,17 +106,17 @@
     register: vm_boot_order
   - name: Adding VMX Entry - floppy0.fileType
     lineinfile:
-      path: '/vmfs/volumes/{{ esxi_local_datastore }}/{{ dc_hostname }}/{{ dc_hostname }}.vmx'
+      path: '/vmfs/volumes/{{ esxi_datastore }}/{{ vm_name }}/{{ vm_name }}.vmx'
       line: 'floppy0.fileType = "file"'
     delegate_to: '{{ esxi_address }}'
   - name: Adding VMX Entry - floppy0.fileName
     lineinfile:
-      path: '/vmfs/volumes/{{ esxi_local_datastore }}/{{ dc_hostname }}/{{ dc_hostname }}.vmx'
-      line: 'floppy0.fileName = "/vmfs/volumes/{{ esxi_local_datastore }}/floppy.flp"'
+      path: '/vmfs/volumes/{{ esxi_datastore }}/{{ vm_name }}/{{ vm_name }}.vmx'
+      line: 'floppy0.fileName = "/vmfs/volumes/{{ esxi_datastore }}/{{ windows_flp }}"'
     delegate_to: '{{ esxi_address }}'
   - name: Removing VMX Entry - floppy0.present = "FALSE"
     lineinfile:
-      path: '/vmfs/volumes/{{ esxi_local_datastore }}/{{ dc_hostname }}/{{ dc_hostname }}.vmx'
+      path: '/vmfs/volumes/{{ esxi_datastore }}/{{ vm_name }}/{{ vm_name }}.vmx'
       line: 'floppy0.present = "FALSE"'
       state: absent
     delegate_to: '{{ esxi_address }}'
@@ -126,90 +132,70 @@
   - name: Power-On the virtual machine
     vmware_guest_powerstate:
       <<: *esxi_login
-      name: '{{ dc_hostname }}'
+      name: '{{ vm_name }}'
       state: powered-on
     delegate_to: localhost
     register: powerstate
   - name: Wait for VMware tools to become available 
     vmware_guest_tools_wait:
-      hostname: '{{ esxi_address }}'
-      username: '{{ esxi_username }}'
-      password: '{{ lab_password }}'
-      validate_certs: no
-      name: '{{ dc_hostname }}'
+      <<: *esxi_login
+      name: '{{ vm_name }}'
     delegate_to: localhost
     retries: 3
     delay: 15
     register: result           
     until: result is succeeded 
-- name: Customize Guest
-  hosts: localhost 
-  gather_facts: false
-  vars:
-    validate_certs: no
-  vars_files: 
-    vars.yml
-  tasks: 
+# - name: Customize Guest
+#   hosts: localhost 
+#   gather_facts: false
+#   vars_files: 
+#     vars.yml
+#   tasks: 
   - name: Set password via vmware_vm_shell
     local_action:
       module: vmware_vm_shell
-      hostname: '{{ esxi_address }}'
-      username: '{{ esxi_username }}'
-      password: '{{ lab_password }}'
-      validate_certs: no
+      <<: *esxi_login
       vm_username: Administrator
-      vm_password: '{{ temporary_password }}'
-      vm_id: '{{ dc_hostname }}'
+      vm_password: '{{ vm_password_old }}'
+      vm_id: '{{ vm_name }}'
       vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
-      vm_shell_args: '-command "(net user Administrator {{ lab_password }})"'
+      vm_shell_args: '-command "(net user Administrator {{ vm_password_new }})"'
       wait_for_process: true
     ignore_errors: yes
   - name: Configure IP address via vmware_vm_shell
     local_action:
       module: vmware_vm_shell
-      hostname: '{{ esxi_address }}'
-      username: '{{ esxi_username }}'
-      password: '{{ lab_password }}'
-      validate_certs: no
+      <<: *esxi_login
       vm_username: Administrator
-      vm_password: '{{ lab_password }}'
-      vm_id: '{{ dc_hostname }}'
+      vm_password: '{{ vm_password_new }}'
+      vm_id: '{{ vm_name }}'
       vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
-      vm_shell_args: '-command "(new-netipaddress -InterfaceAlias Ethernet0 -IPAddress {{ dc_address }} -prefixlength {{lab_netmask_cidr}} -defaultgateway {{ lab_gateway }})"' 
+      vm_shell_args: '-command "(new-netipaddress -InterfaceAlias Ethernet0 -IPAddress {{ vm_address }} -prefixlength {{vm_netmask_cidr}} -defaultgateway {{ vm_gateway }})"' 
       wait_for_process: true
   - name: Configure DNS via vmware_vm_shell
     local_action:
       module: vmware_vm_shell
-      hostname: '{{ esxi_address }}'
-      username: '{{ esxi_username }}'
-      password: '{{ lab_password }}'
-      validate_certs: no
+      <<: *esxi_login
       vm_username: Administrator
-      vm_password: '{{ lab_password }}'
-      vm_id: '{{ dc_hostname }}'
+      vm_password: '{{ vm_password_new }}'
+      vm_id: '{{ vm_name }}'
       vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
-      vm_shell_args: '-command "(Set-DnsClientServerAddress -InterfaceAlias Ethernet0 -ServerAddresses {{ lab_upstream_dns }})"'
+      vm_shell_args: '-command "(Set-DnsClientServerAddress -InterfaceAlias Ethernet0 -ServerAddresses {{ vm_dns_server }})"'
       wait_for_process: true
   - name: Rename Computer via vmware_vm_shell
     local_action:
       module: vmware_vm_shell
-      hostname: '{{ esxi_address }}'
-      username: '{{ esxi_username }}'
-      password: '{{ lab_password }}'
-      validate_certs: no
+      <<: *esxi_login
       vm_username: Administrator
-      vm_password: '{{ lab_password }}'
-      vm_id: '{{ dc_hostname }}'
+      vm_password: '{{ vm_password_new }}'
+      vm_id: '{{ vm_name }}'
       vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
-      vm_shell_args: '-command "(Rename-Computer -NewName {{ dc_hostname }})"'
+      vm_shell_args: '-command "(Rename-Computer -NewName {{ vm_name }})"'
       wait_for_process: true
   - name: Reboot-Guest
     vmware_guest_powerstate:
-      hostname: '{{ esxi_address }}'
-      username: '{{ esxi_username }}'
-      password: '{{ lab_password }}'
-      validate_certs: no  
-      name: '{{ dc_hostname }}'
+      <<: *esxi_login 
+      name: '{{ vm_name }}'
       state: reboot-guest
     delegate_to: localhost
     register: deploy
@@ -218,11 +204,8 @@
     delegate_to: localhost
   - name: Wait for VMware tools to become available by name
     vmware_guest_tools_wait:
-      hostname: '{{ esxi_address }}'
-      username: '{{ esxi_username }}'
-      password: '{{ lab_password }}'
-      validate_certs: no
-      name: '{{ dc_hostname }}'
+      <<: *esxi_login
+      name: '{{ vm_name }}'
     delegate_to: localhost
     retries: 3
     delay: 15
@@ -233,12 +216,10 @@
     delegate_to: localhost
   - name: Find the VM's IP Address via VMware tools
     vmware_guest_facts:
-      hostname: '{{ esxi_address }}'
-      username: '{{ esxi_username }}'
-      password: '{{ lab_password }}'
+      <<: *esxi_login
       datacenter: ha-datacenter
-      validate_certs: no
-      name: '{{ dc_hostname }}'
+      name: '{{ vm_name }}'
     delegate_to: localhost
-    register: vmfacts_dc01
-  - debug: msg="IP Address - {{ vmfacts_dc01['instance']['ipv4'] }}"   
+    register: vmfacts
+  - debug: msg="IP Address - {{ vmfacts['instance']['ipv4'] }}"   
+

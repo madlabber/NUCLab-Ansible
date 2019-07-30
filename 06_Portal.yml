@@ -36,6 +36,7 @@
       src: '{{local_assets_path}}/{{ portal_ntap_pstk_msi }}'
       dest: 'c:\Windows\temp\{{ portal_ntap_pstk_msi }}'
     delegate_to: '{{ dc_address }}'
+  # The PSTK installer is broken in a way that prevents /q* flags from working
   # - name: install PSTK
   #   raw: 'msiexec /qn /l* C:\Windows\Temp\pstk-log.txt /i c:\Windows\temp\{{ portal_ntap_pstk_msi }}'
   - name: download git-client

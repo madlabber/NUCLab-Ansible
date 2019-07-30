@@ -59,10 +59,10 @@
       hardware:
         memory_reservation_lock: true
     delegate_to: localhost
-- hosts: localhost
-  vars_files: 
-    vars.yml
-  tasks:
+# - hosts: localhost
+#   vars_files: 
+#     vars.yml
+#   tasks:
   - add_host:
       name: '{{ esxi_address }}'
       group: "esx"

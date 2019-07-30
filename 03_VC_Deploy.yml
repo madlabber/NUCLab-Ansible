@@ -19,7 +19,7 @@
       username: '{{ esxi_username }}'
       password: '{{ esxi_password }}'
       name: '{{ vcenter_hostname }}' # shortname, not FQDN
-      ovf: '{{ vcenter_ova }}' 
+      ovf: '{{ files_path }}/{{ vcenter_ova }}' 
       wait_for_ip_address: true
       validate_certs: no
       inject_ovf_env: true
@@ -45,7 +45,7 @@
       password: '{{ vcenter_password }}'
       validate_certs: no
     delegate_to: localhost
-    retries: 20
+    retries: 30
     delay: 60
     register: result           
     until: result is succeeded 

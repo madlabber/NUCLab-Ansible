@@ -1,5 +1,6 @@
 ---
 - hosts: localhost
+  gather_facts: false
   tasks:
 - name: Configure ESX
   import_playbook: 01_ESXi_Config.yml
