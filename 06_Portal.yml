@@ -33,7 +33,7 @@
     delegate_to: '{{ dc_address }}'
   - name: Copy the NetApp Powershell Toolkit installer (PSTK)
     win_copy:
-      src: '{{local_assets_path}}/{{ portal_ntap_pstk_msi }}'
+      src: '{{files_path}}/{{ portal_ntap_pstk_msi }}'
       dest: 'c:\Windows\temp\{{ portal_ntap_pstk_msi }}'
     delegate_to: '{{ dc_address }}'
   # The PSTK installer is broken in a way that prevents /q* flags from working

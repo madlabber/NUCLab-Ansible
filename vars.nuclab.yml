@@ -1,0 +1,42 @@
+lab_domain: "nuc.lab"
+lab_password: "P@ssw0rd"
+lab_netmask: "255.255.255.0"
+lab_netmask_cidr: "24"
+lab_gateway: "192.168.223.1"
+lab_upstream_dns: "8.8.8.8"
+temporary_password: "Changeme!"
+esxi_address: "192.168.223.41"
+dc_address: "192.168.223.21"
+vcenter_address: "192.168.223.40"
+ontap_address: "192.168.223.10"
+ontap_node_address: "192.168.223.11"
+ontap_svm_address: "192.168.223.30"
+esxi_hostname: "esx01"
+esxi_username: "root"
+esxi_local_datastore: "datastore1"
+dc_hostname: dc
+vcenter_hostname: "vc"
+vcenter_username: "administrator@vsphere.local"
+vcenter_datacenter: "Datacenter"
+vcenter_cluster: "Cluster"
+ontap_hostname: "select"
+ontap_memory_mb: 16384 # Minimum supported is 16384 (16gb), minimum working is 6144 (6gb).  8gb is suggested due to resource constraints on a NUC
+ontap_num_vcpus: 4 # Minimum supported is 4.  Minimum working is 2.  4 may require more ram (>8gb) or a bootarg to set vnvram to 512.
+ontap_svm_name: "nucvlab"
+ontap_svm_lif: "nucvlab_lif1"
+ontap_vol_labs: "labs"
+ontap_vol_install: "install"
+portal_home_dir: 'C:\vlab'
+portal_sitename: 'Lab Portal'
+portal_rdpdomain: 'LAB'
+portal_rdpuser: 'administrator'
+files_path: "/Users/lusid/Downloads/NUCLab"
+vaai_plugin: NetAppNasPlugin.v23.vib
+vcenter_ova: "VMware-vCenter-Server-Appliance-6.7.0.20000-10244745_OVF10.ova"
+#ontap_select_ova: "9.6_DataONTAPv-esx-standalone-eval-nodar.ova"
+ontap_select_ova: "ONTAP/DataONTAPv.ovf"
+portal_ntap_pstk_msi: "NetApp_PowerShell_Toolkit_9.6.0.msi"
+windows_iso: "Windows_Server_2016_Datacenter_EVAL_en-us_14393_refresh.ISO"
+windows_iso_url: "http://software-download.microsoft.com/download/pr/Windows_Server_2016_Datacenter_EVAL_en-us_14393_refresh.ISO"
+windows_flp: server2016eval.flp
+windows_flp_url: "http://github.madlabber.com/server2016eval.flp"
