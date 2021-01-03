@@ -1,16 +1,16 @@
-lab_domain: "demo.lab"
-lab_password: "P@ssw0rd"
+lab_domain: "mylab.tld"
+lab_password: "ChamgeMe2!"
 lab_netmask: "255.255.255.0"
 lab_netmask_cidr: "24"
-lab_gateway: "172.16.108.2"
-lab_upstream_dns: "172.16.108.2"
+lab_gateway: "192.168.0.1"
+lab_upstream_dns: "192.168.0.1"
 temporary_password: "Changeme!"
-esxi_address: "172.16.108.20"
-dc_address: "172.16.108.21"
-vcenter_address: "172.16.108.22"
-ontap_address: "172.16.108.23"
-ontap_node_address: "172.16.108.24"
-ontap_svm_address: "172.16.108.25"
+esxi_address: "192.168.0.241"
+dc_address: "192.168.0.221"
+vcenter_address: "192.168.0.240"
+ontap_address: "192.168.0.210"
+ontap_node_address: "192.168.0.211"
+ontap_svm_address: "192.168.0.213"
 esxi_hostname: "esx01"
 esxi_username: "root"
 esxi_local_datastore: "datastore1"
@@ -19,9 +19,10 @@ vcenter_hostname: "vc01"
 vcenter_username: "administrator@vsphere.local"
 vcenter_datacenter: "Datacenter"
 vcenter_cluster: "Cluster"
-ontap_hostname: "ots"
-ontap_memory_mb: 6144 # Minimum supported is 16gb, minimum working is 6gb.  8gb is suggested due to resource constraints on a NUC
-ontap_num_vcpus: 2 # Minimum supported is 4.  Minimum working is 2.  4 may require more ram (>8gb) or a bootarg to set vnvram to 512.
+ontap_hostname: "ontap"
+ontap_memory_mb: 16348 # Minimum supported is 16gb, minimum working is 6gb.  8gb is suggested due to resource constraints on a NUC
+ontap_num_vcpus: 4 # Minimum supported is 4.  Minimum working is 2.  4 may require more ram (>8gb) or a bootarg to set vnvram to 512.
+ontap_data_disk_gb: "100" #minimum usable is about 100gb, minimum supported is 1tb
 ontap_svm_name: "svm1"
 ontap_svm_lif: "svm1_lif1"
 ontap_vol_labs: "labs"
@@ -30,12 +31,13 @@ portal_home_dir: 'C:\vlab'
 portal_sitename: 'Lab Portal'
 portal_rdpdomain: 'LAB'
 portal_rdpuser: 'administrator'
-files_path: "/Users/shatfiel/Downloads/NUCLab"
+files_path: "/Users/lusid/Downloads/NUCLab"
 vaai_plugin: NetAppNasPlugin.v23.vib
-vcenter_ova: "VMware-vCenter-Server-Appliance-6.7.0.20000-10244745_OVF10.ova"
-ontap_select_ova: "9.6RC1_DataONTAPv-esx-standalone-eval-nodar.ova"
-portal_ntap_pstk_msi: "NetApp_PowerShell_Toolkit_9.6.0.msi"
-windows_iso: "Windows_Server_2016_Datacenter_EVAL_en-us_14393_refresh.ISO"
-windows_iso_url: "http://software-download.microsoft.com/download/pr/Windows_Server_2016_Datacenter_EVAL_en-us_14393_refresh.ISO"
-windows_flp: server2016eval.flp
-windows_flp_url: "http://github.madlabber.com/server2016eval.flp"
+vcenter_ova: "VMware-vCenter-Server-Appliance-7.0.1.00200-17327517_OVF10.ova"
+ontap_select_ova: "9.8_DataONTAPv-esx-standalone-eval-nodar.ova"
+portal_ntap_pstk_msi: "NetApp_PowerShell_Toolkit_9.8.0.msi"
+windows_iso: "17763.737.190906-2324.rs5_release_svc_refresh_SERVER_EVAL_x64FRE_en-us_1.iso"
+#windows_iso_url: "http://software-download.microsoft.com/download/pr/Windows_Server_2016_Datacenter_EVAL_en-us_14393_refresh.ISO"
+windows_iso_url: "https://software-download.microsoft.com/download/pr/17763.737.190906-2324.rs5_release_svc_refresh_SERVER_EVAL_x64FRE_en-us_1.iso"
+windows_flp: server2019eval.flp
+windows_flp_url: "http://github.madlabber.com/server2019eval.flp"

@@ -25,7 +25,7 @@
       properties:
         DeploymentOption.value: 'ONTAPSelectEVALSmall' # <=9.5 use 'ONTAPSelectEVAL', 9.6+ use 'ONTAPSelectEVALSmall'
         clustername: '{{ ontap_hostname }}'
-        Data-disk: '100'
+        Data-disk: '{{ ontap_data_disk_gb }}'
         cluster_mgmt_ipaddr: '{{ ontap_address }}' 
         node_mgmt_ipaddr: '{{ ontap_node_address }}' 
         netmask: '{{ lab_netmask }}' 
@@ -33,7 +33,7 @@
         node_name: '{{ ontap_node_name }}' 
         password: '{{ lab_password }}' 
     delegate_to: localhost
-    retries: 3
+    retries: 10
     delay: 60
     register: result           
     until: result is succeeded 
