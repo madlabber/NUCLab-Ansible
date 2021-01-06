@@ -36,9 +36,9 @@
       src: '{{files_path}}/{{ portal_ntap_pstk_msi }}'
       dest: 'c:\Windows\temp\{{ portal_ntap_pstk_msi }}'
     delegate_to: '{{ dc_address }}'
-  # The PSTK installer is broken in a way that prevents /q* flags from working
-  # - name: install PSTK
-  #   raw: 'msiexec /qn /l* C:\Windows\Temp\pstk-log.txt /i c:\Windows\temp\{{ portal_ntap_pstk_msi }}'
+  - name: install PSTK
+    raw: 'msiexec /qn /l* C:\Windows\Temp\pstk-log.txt /i c:\Windows\temp\{{ portal_ntap_pstk_msi }}'
+    delegate_to: '{{ dc_address }}'
   - name: download git-client
     win_get_url:
       url: 'https://github.com/git-for-windows/git/releases/download/v2.21.0.windows.1/Git-2.21.0-64-bit.exe'
@@ -60,12 +60,12 @@
     delegate_to: '{{ dc_address }}'
   - name: download node.js
     win_get_url:
-      url: 'https://nodejs.org/dist/v10.15.3/node-v10.15.3-x64.msi'
-      dest: 'C:\Windows\Temp\node-v10.15.3-x64.msi'
+      url: 'https://nodejs.org/dist/v14.15.3/node-v14.15.3-x64.msi'
+      dest: 'C:\Windows\Temp\node-v14.15.3-x64.msi'
       force: no
     delegate_to: '{{ dc_address }}'
   - name: install node.js
-    raw: 'msiexec /qn /l* C:\Windows\Temp\node-log.txt /i C:\Windows\Temp\node-v10.15.3-x64.msi'
+    raw: 'msiexec /qn /l* C:\Windows\Temp\node-log.txt /i C:\Windows\Temp\node-v14.15.3-x64.msi'
     delegate_to: '{{ dc_address }}'
   - name: Install nodemon
     win_shell: 'npm install nodemon -g'
@@ -79,12 +79,12 @@
     delegate_to: '{{ dc_address }}'
   - name: download myrtille
     win_get_url:
-      url: 'https://github.com/cedrozor/myrtille/releases/download/v2.3.1/Myrtille_2.3.1_x86_x64_Setup.exe'
-      dest: 'C:\Windows\Temp\Myrtille_2.3.1_x86_x64_Setup.exe'
+      url: 'https://github.com/cedrozor/myrtille/releases/download/v2.9.1/Myrtille_2.9.1_x86_x64_Setup.msi'
+      dest: 'C:\Windows\Temp\myrtille.msi'
     delegate_to: '{{ dc_address }}'
-  - name: Extract Myrtille
-    raw: 'C:\Windows\Temp\Myrtille_2.3.1_x86_x64_Setup.exe -y'
-    delegate_to: '{{ dc_address }}'
+  #- name: Extract Myrtille
+  #  raw: 'C:\Windows\Temp\Myrtille_2.7.1_x86_x64_Setup.exe -y'
+  #  delegate_to: '{{ dc_address }}'
   - name: install Myrtille
     raw: 'msiexec /qb! /l* C:\Windows\Temp\myrtille-log.txt /i C:\Windows\Temp\myrtille.msi'  
     delegate_to: '{{ dc_address }}'
