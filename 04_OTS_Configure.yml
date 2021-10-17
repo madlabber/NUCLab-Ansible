@@ -9,6 +9,19 @@
   vars_files: 
     vars.yml
   tasks:
+  - name: Get NetApp info
+    na_ontap_gather_facts:
+      state: info
+      hostname: "{{ ontap_address }}"
+      username: admin
+      password: "{{ lab_password }}"
+      https: true
+      validate_certs: false 
+    delegate_to: localhost
+    retries: 20
+    delay: 60
+    register: result           
+    until: result is succeeded 
   - name: Create Aggregates and wait 5 minutes until aggregate is online
     na_ontap_aggregate:
       state: present
