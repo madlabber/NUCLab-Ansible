@@ -1,15 +1,19 @@
 
 This playbook performs the initial setup of the host for the NUC lab.
 
+Updated:
 Prerequisits:
-1. Ansible 2.8
+1. Ansible 2.14.3, python3 (tested on 3.9.6)
 2. pyvmomi module (required by the VMware Ansible modules)
-     pip install pyvmomi
-3. ESX must be installed and the IP/hostname/dns must be configured in the console interface (DCUI)
-4. The clock on the ESXi host should be set prior to proceeding with configuration, otherwise the vcenter deployment may fail.
+     pip3 install pyvmomi
+     pip3 install requests
+3. ansible-galaxy collection install community.vmware
+4. ESX must be installed and the IP/hostname/dns must be configured in the console interface (DCUI)
+5. The clock on the ESXi host should be set prior to proceeding with configuration, otherwise the vcenter deployment may fail.
+6. on MacOS it will error if sshpass is not installed:
+  brew install hudochenkov/sshpass/sshpass
 
 Running the playbook:
 1. Edit the vars.yml file as required
 2. Run the playbook
     ansible-playbook 01_ESXi_Config.yml
-

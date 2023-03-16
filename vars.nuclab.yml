@@ -31,8 +31,8 @@ portal_home_dir: 'C:\vlab'
 portal_sitename: 'Lab Portal'
 portal_rdpdomain: 'LAB'
 portal_rdpuser: 'administrator'
-files_path: "/Users/lusid/Downloads/NUCLab"
-vaai_plugin: NetAppNasPlugin.v23.vib
+files_path: "files"
+vaai_plugin: NetApp_bootbank_NetAppNasPlugin_2.0.1-16.vib
 vcenter_ova: "VMware-vCenter-Server-Appliance-7.0.1.00200-17327517_OVF10.ova"
 ontap_select_ova: "9.8_DataONTAPv-esx-standalone-eval-nodar.ova"
 portal_ntap_pstk_msi: "NetApp_PowerShell_Toolkit_9.8.0.msi"

@@ -1,6 +1,8 @@
 --- 
 - hosts: localhost 
   name: ESXi Configuration 
+  collections: 
+    - community.vmware
   gather_facts: false
   vars:
     esxi_login: &esxi_login
@@ -77,12 +79,13 @@
       mtu: 9000
     delegate_to: localhost
   - name: Configure ESXi hostname and upstream DNS servers
-    vmware_dns_config:
+    vmware_host_dns:
       <<: *esxi_login
-      change_hostname_to: '{{ esxi_hostname }}'
-      domainname: '{{ lab_domain }}'
+      host_name: '{{ esxi_hostname }}'
+      domain: '{{ lab_domain }}'
       dns_servers:
       - '{{ lab_upstream_dns }}'
+      type: static
     delegate_to: localhost
   - name: Copy VAAI vib to esx host
     copy:
