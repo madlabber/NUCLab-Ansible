@@ -1,6 +1,9 @@
 ---
 - name: Create new Active-Directory Domain & Forest
   hosts: localhost
+  collections: 
+    - community.vmware
+    - community.windows
   vars_files:
    - vars.yml
   gather_facts: no
@@ -96,6 +99,8 @@
     win_psmodule:
       name: xRemoteDesktopAdmin
       state: present
+      repository: PSGallery
+      accept_license: true
     delegate_to: "{{ dc_address }}"
   - name: Enable Remote Desktop
     win_dsc:

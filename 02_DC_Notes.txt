@@ -5,6 +5,8 @@ Prerequisits:
 1. The host must have a working internet connection
 2. The Ansible controller must have pywinrm installed
 3. Customize vars.yml as required
+4. pip3 install pywinrm
+
 
 Deploying the VM:
 1. Run the Deploy playbook

@@ -1,6 +1,9 @@
 ---
 - name: Create Windows VM from scratch
   hosts: localhost
+  collections: 
+    - community.vmware
+    - community.windows
   gather_facts: false
   vars:
     esxi_password: '{{ lab_password }}'
@@ -33,7 +36,7 @@
       ansible_password: '{{ esxi_password }}'
       ansible_ssh_common_args: '-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
   - name: Gather facts about ESXi Host services
-    vmware_host_service_facts:
+    vmware_host_service_info:
       <<: *esxi_login
       esxi_hostname: '{{ esxi_fqdn }}'
     delegate_to: localhost
@@ -52,6 +55,16 @@
       service_name: TSM
       state: present
     delegate_to: localhost
+
+# Toggle the httpClient firewall rule because esxi8 will claim its enabled when it is not
+  - name: Disable httpClient
+    shell: 'esxcli network firewall ruleset set --enabled=false --ruleset-id=httpClient'
+    delegate_to: '{{ esxi_address }}'  
+  - name: Enable httpClient
+    shell: 'esxcli network firewall ruleset set --enabled=true --ruleset-id=httpClient'
+    delegate_to: '{{ esxi_address }}'  
+
+# carry on
   - name: Download the Windows Server ISO
     shell: 'wget -P /vmfs/volumes/{{ esxi_datastore }} {{ windows_iso_url }}'
     args:
@@ -120,15 +133,15 @@
       line: 'floppy0.present = "FALSE"'
       state: absent
     delegate_to: '{{ esxi_address }}'
-  - name: Restore original service states
-    vmware_host_service_manager:
-      <<: *esxi_login
-      esxi_hostname: '{{ esxi_address }}'
-      service_name: '{{ item.key }}'
-      state: absent
-    delegate_to: localhost
-    loop: "{{ host_services['host_service_facts'][esxi_fqdn] }}"
-    when: item.running|bool == false
+  # - name: Restore original service states
+  #   vmware_host_service_manager:
+  #     <<: *esxi_login
+  #     esxi_hostname: '{{ esxi_address }}'
+  #     service_name: '{{ item.key }}'
+  #     state: absent
+    # delegate_to: localhost
+    # loop: "{{ host_services['host_service_facts'][esxi_fqdn] }}"
+    # when: item.running|bool == false
   - name: Power-On the virtual machine
     vmware_guest_powerstate:
       <<: *esxi_login
@@ -215,7 +228,7 @@
     wait_for: timeout=30
     delegate_to: localhost
   - name: Find the VM's IP Address via VMware tools
-    vmware_guest_facts:
+    vmware_guest_info:
       <<: *esxi_login
       datacenter: ha-datacenter
       name: '{{ vm_name }}'
