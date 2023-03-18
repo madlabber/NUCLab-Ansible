@@ -23,3 +23,6 @@ Note:
    It can take 5 minutes or more for the ONTAP Select VM to initialize after running the deploy playbook.  Monitor the VM
    Console and wait for the login prompt before running the configure playbook.
 
+
+pip3 install netapp-lib
+ansible-galaxy collection install netapp.ontap

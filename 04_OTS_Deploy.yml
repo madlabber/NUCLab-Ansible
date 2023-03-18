@@ -1,6 +1,9 @@
 ---
 - hosts: localhost 
   name: Deploy ONTAP Select Single Node Cluster
+  collections: 
+    - community.vmware
+    - netapp.ontap
   gather_facts: false
   vars:
     validate_certs: no
@@ -50,9 +53,9 @@
         num_cpus: '{{ ontap_num_vcpus }}'
         memory_reservation_lock: true
         cpu_reservation: 1000 # ensure enough CPU to flush nvram when host is overloaded
-      customvalues:
-        - key: pciHole.start
-          value: 1024  # Moving the PCI hole here gives ONTAP access to more system ram
+    # customvalues:   # <- this broke in Ansible 2.10
+    #   - key: pciHole.start
+    #     value: 1024  # Moving the PCI hole here gives ONTAP access to more system ram
     delegate_to: localhost
   - name: Start VM
     vmware_guest:
@@ -66,7 +69,7 @@
     delegate_to: localhost
   # Wait until ONTAP is responsive
   - name: Get NetApp info
-    na_ontap_gather_facts:
+    na_ontap_info:
       state: info
       hostname: "{{ ontap_address }}"
       username: admin

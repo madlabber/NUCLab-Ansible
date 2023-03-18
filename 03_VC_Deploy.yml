@@ -1,6 +1,8 @@
 ---
 - hosts: localhost 
   name: vCenter Configuration 
+  collections: 
+    - community.vmware
   gather_facts: false
   vars:
     esxi_password: '{{ lab_password }}'
@@ -20,6 +22,9 @@
       password: '{{ esxi_password }}'
       name: '{{ vcenter_hostname }}' # shortname, not FQDN
       ovf: '{{ files_path }}/{{ vcenter_ova }}' 
+      disk_provisioning: thin
+      networks:
+          "Network 1": "{{vm_network}}"
       wait_for_ip_address: true
       validate_certs: no
       inject_ovf_env: true
@@ -35,11 +40,12 @@
         guestinfo.cis.appliance.root.passwd: '{{ vcenter_password }}' 
         guestinfo.cis.deployment.autoconfig: 'True' # Auto-configure after deployment
         guestinfo.cis.vmdir.password: '{{ vcenter_password }}' # SSO Password for administrator@vsphere.local
+        guestinfo.cis.upgrade.import.directory: "/storage/seat/cis-export-folder" #FIX for VCSA 8.0
         domain: '{{ domain }}'
         searchpath: '{{ searchpath }}'
     delegate_to: localhost
   - name: Wait for vCenter
-    vmware_about_facts:
+    vmware_about_info:
       hostname: '{{ vcenter_address }}'
       username: 'administrator@vsphere.local'
       password: '{{ vcenter_password }}'

@@ -31,14 +31,14 @@
       data: 0
       type: dword 
     delegate_to: '{{ dc_address }}'
-  - name: Copy the NetApp Powershell Toolkit installer (PSTK)
-    win_copy:
-      src: '{{files_path}}/{{ portal_ntap_pstk_msi }}'
-      dest: 'c:\Windows\temp\{{ portal_ntap_pstk_msi }}'
-    delegate_to: '{{ dc_address }}'
-  - name: install PSTK
-    raw: 'msiexec /qn /l* C:\Windows\Temp\pstk-log.txt /i c:\Windows\temp\{{ portal_ntap_pstk_msi }}'
-    delegate_to: '{{ dc_address }}'
+  # - name: Copy the NetApp Powershell Toolkit installer (PSTK)
+  #   win_copy:
+  #     src: '{{files_path}}/{{ portal_ntap_pstk_msi }}'
+  #     dest: 'c:\Windows\temp\{{ portal_ntap_pstk_msi }}'
+  #   delegate_to: '{{ dc_address }}'
+  # - name: install PSTK
+  #   raw: 'msiexec /qn /l* C:\Windows\Temp\pstk-log.txt /i c:\Windows\temp\{{ portal_ntap_pstk_msi }}'
+  #   delegate_to: '{{ dc_address }}'
   - name: download git-client
     win_get_url:
       url: 'https://github.com/git-for-windows/git/releases/download/v2.21.0.windows.1/Git-2.21.0-64-bit.exe'

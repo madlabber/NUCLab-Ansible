@@ -19,6 +19,7 @@ vcenter_hostname: "vc"
 vcenter_username: "administrator@vsphere.local"
 vcenter_datacenter: "Datacenter"
 vcenter_cluster: "Cluster"
+vm_network: "VM Network"
 ontap_hostname: "ontap"
 ontap_memory_mb: 16348 # Minimum supported is 16gb, minimum working is 6gb.  8gb is suggested due to resource constraints on a NUC
 ontap_num_vcpus: 4 # Minimum supported is 4.  Minimum working is 2.  4 may require more ram (>8gb) or a bootarg to set vnvram to 512.
@@ -33,11 +34,10 @@ portal_rdpdomain: 'LAB'
 portal_rdpuser: 'administrator'
 files_path: "files"
 vaai_plugin: NetApp_bootbank_NetAppNasPlugin_2.0.1-16.vib
-vcenter_ova: "VMware-vCenter-Server-Appliance-7.0.1.00200-17327517_OVF10.ova"
-ontap_select_ova: "9.8_DataONTAPv-esx-standalone-eval-nodar.ova"
+vcenter_ova: "VMware-vCenter-Server-Appliance-8.0.0.10000-20519528_OVF10.ova"
+ontap_select_ova: "9121_DataONTAPv-esx-standalone-eval-nodar.ova"
 portal_ntap_pstk_msi: "NetApp_PowerShell_Toolkit_9.8.0.msi"
 windows_iso: "17763.737.190906-2324.rs5_release_svc_refresh_SERVER_EVAL_x64FRE_en-us_1.iso"
-#windows_iso_url: "http://software-download.microsoft.com/download/pr/Windows_Server_2016_Datacenter_EVAL_en-us_14393_refresh.ISO"
 windows_iso_url: "http://software-download.microsoft.com/download/pr/17763.737.190906-2324.rs5_release_svc_refresh_SERVER_EVAL_x64FRE_en-us_1.iso"
 windows_flp: server2019eval.flp
 windows_flp_url: "http://github.madlabber.com/server2019eval.flp"

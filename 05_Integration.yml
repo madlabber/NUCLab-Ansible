@@ -2,6 +2,9 @@
 - hosts: localhost
   gather_facts: false
   name: Integration Tasks
+  collections: 
+    - community.vmware
+    - netapp.ontap
   vars:
     https: true
     validate_certs: false
@@ -37,17 +40,17 @@
       nfs_ro: no
       state: present
     delegate_to: localhost
-  - name: Reserve vCenter RAM
-    vmware_guest:
-      hostname: '{{ vcenter_address }}'
-      username: '{{ vcenter_username }}'
-      password: '{{ lab_password }}'
-      validate_certs: no
-      name: '{{ vcenter_hostname }}'
-      state: present
-      hardware:
-        memory_reservation_lock: true
-    delegate_to: localhost
+  # - name: Reserve vCenter RAM
+  #   vmware_guest:
+  #     hostname: '{{ vcenter_address }}'
+  #     username: '{{ vcenter_username }}'
+  #     password: '{{ lab_password }}'
+  #     validate_certs: no
+  #     name: '{{ vcenter_hostname }}'
+  #     state: present
+  #     hardware:
+  #       memory_reservation_lock: true
+  #   delegate_to: localhost
   - name: Reserve DC RAM
     vmware_guest:
       hostname: '{{ vcenter_address }}'

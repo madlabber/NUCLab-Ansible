@@ -1,13 +1,15 @@
 --- 
 - hosts: localhost 
   name: vCenter Configuration 
+  collections: 
+    - community.vmware
   vars:
     validate_certs: no
   vars_files: 
     vars.yml
   tasks: 
   - name: Gather facts about vCenter
-    vmware_about_facts:
+    vmware_about_info:
       hostname: '{{ vcenter_address }}'
       username: '{{ vcenter_username }}'
       password: '{{ lab_password }}'
@@ -31,20 +33,31 @@
       datacenter_name: '{{ vcenter_datacenter }}'
       cluster_name: '{{ vcenter_cluster }}'
       validate_certs: '{{ validate_certs }}'
-      enable_ha: no
-      enable_drs: yes
-      enable_vsan: no
+      #enable_ha: no
+      #enable_drs: yes
+      #enable_vsan: no
+    delegate_to: localhost
+  - name: Enable DRS
+    community.vmware.vmware_cluster_drs:
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ lab_password }}'
+      datacenter_name: '{{ vcenter_datacenter }}'
+      cluster_name: '{{ vcenter_cluster }}'
+      validate_certs: '{{ validate_certs }}'
+      enable: true
     delegate_to: localhost
   - name: Configure ESXi hostname and private DNS servers
-    vmware_dns_config:
+    vmware_host_dns:
       hostname: '{{ esxi_address }}'
       username: '{{ esxi_username }}'
       password: '{{ lab_password }}'
       validate_certs: no 
-      change_hostname_to: '{{ esxi_hostname }}'
-      domainname: '{{ lab_domain }}'
+      host_name: '{{ esxi_hostname }}'
+      domain: '{{ lab_domain }}'
       dns_servers:
       - '{{ dc_address }}'
+      type: static
     delegate_to: localhost
   - name: Add ESXi Host to vCenter
     vmware_host:

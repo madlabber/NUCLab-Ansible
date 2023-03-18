@@ -2,6 +2,9 @@
 - hosts: localhost 
   gather_facts: false
   name: Configure ONTAP Select 
+  collections: 
+    - community.vmware
+    - netapp.ontap
   vars:
     https: true
     validate_certs: false
@@ -10,8 +13,8 @@
     vars.yml
   tasks:
   - name: Get NetApp info
-    na_ontap_gather_facts:
-      state: info
+    na_ontap_rest_info:
+      #state: info
       hostname: "{{ ontap_address }}"
       username: admin
       password: "{{ lab_password }}"
@@ -35,13 +38,14 @@
       password: "{{ lab_password }}"
       https: true
       validate_certs: false
+      nodes: "{{ ontap_hostname }}-01"
   - name: Create SVM
     na_ontap_svm:
       state: present
       name: "{{ ontap_svm_name }}"
-      root_volume: "{{ ontap_svm_name }}_root"
-      root_volume_aggregate: aggr1
-      root_volume_security_style: unix
+      #root_volume: "{{ ontap_svm_name }}_root"
+      #root_volume_aggregate: aggr1
+      #root_volume_security_style: unix
       hostname: "{{ ontap_address }}"
       username: admin
       password: "{{ lab_password }}"
@@ -53,11 +57,11 @@
       interface_name: "{{ ontap_svm_lif }}"
       home_port: e0a
       home_node: "{{ ontap_node_name }}"
-      role: data
+      #role: data
       protocols: nfs,cifs
       admin_status: up
-      failover_policy: local-only
-      firewall_policy: mgmt-nfs
+      #failover_policy: local-only
+      #firewall_policy: mgmt-nfs
       is_auto_revert: true
       address: "{{ ontap_svm_address }}"
       netmask: "{{ lab_netmask }}"
@@ -186,8 +190,8 @@
       state: present
       share_name: "{{ ontap_vol_install }}"
       path: "/{{ ontap_vol_install }}"
-      share_properties: browsable,oplocks
-      symlink_properties: read_only,enable
+      #share_properties: browsable,oplocks
+      #symlink_properties: read_only,enable
       vserver: "{{ ontap_svm_name }}"
       hostname: "{{ ontap_address }}"
       username: admin
