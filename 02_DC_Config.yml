@@ -95,16 +95,25 @@
       value: '{{ ontap_address }}'
       zone: '{{ lab_domain }}'
     delegate_to: "{{ dc_address }}"
+  - name: Enable PSGallery
+    ansible.windows.win_shell: Set-PSRepository -Name 'PSGallery' -InstallationPolicy Trusted
+    delegate_to: "{{ dc_address }}"
   - name: Ensure the required NuGet package provider version is installed
     ansible.windows.win_shell: Find-PackageProvider -Name Nuget -ForceBootstrap -IncludeDependencies -Force
     delegate_to: "{{ dc_address }}"
-  - name: Check for xRemoteDesktopAdmin Powershell module
-    win_psmodule:
-      name: xRemoteDesktopAdmin
-      state: present
-      repository: PSGallery
-      #accept_license: true
+  - name: invoke install-module -Name xRemoteDesktopAdmin
+    ansible.windows.win_shell: Install-Module -Name xRemoteDesktopAdmin
     delegate_to: "{{ dc_address }}"
+
+  # This is broken now:
+  # - name: Check for xRemoteDesktopAdmin Powershell module
+  #   win_psmodule:
+  #     name: xRemoteDesktopAdmin
+  #     state: present
+  #     #repository: PSGallery
+  #     #accept_license: true
+  #   delegate_to: "{{ dc_address }}"
+  
   - name: Enable Remote Desktop
     win_dsc:
       resource_name: xRemoteDesktopAdmin
